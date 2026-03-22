@@ -1,16 +1,24 @@
-// Copyright 2024 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+import 'dart:math' as math;
+// Copyright (c) 2026 Mudit Purohit
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:m3e_buttons/src/core/m3e_button_group_provider.dart';
+import 'package:m3e_buttons/src/internal/_overflow_strategy.dart';
 import 'package:m3e_buttons/src/internal/_tokens_adapter.dart';
 import 'package:m3e_buttons/src/internal/button_constants.dart';
 import 'package:motor/motor.dart';
+
+part 'm3e_toggle_button_group_collaborators.dart';
+part 'm3e_toggle_button_group_overflow_presenter.dart';
+part 'm3e_toggle_button_group_render.dart';
 
 // ---------------------------------------------------------------------------
 // M3EToggleButtonGroupAction
@@ -54,10 +62,12 @@ class M3EToggleButtonGroupAction {
     this.checked,
     this.enabled = true,
     this.decoration,
+    this.width,
     this.focusNode,
     this.autofocus = false,
     this.onFocusChange,
     this.semanticLabel,
+    this.enableFeedback,
   }) : assert(
          icon != null || label != null,
          'M3EToggleButtonGroupAction must have either an icon or a label.',
@@ -82,6 +92,7 @@ class M3EToggleButtonGroupAction {
   /// External checked state (controlled). Leave null to let the group manage.
   final bool? checked;
 
+  /// Whether this action is enabled.
   final bool enabled;
 
   /// Optional decoration that bundles styling properties together.
@@ -90,12 +101,29 @@ class M3EToggleButtonGroupAction {
   /// parameters (e.g. [backgroundColor], [foregroundColor], etc.).
   final M3EToggleButtonDecoration? decoration;
 
+  /// A custom fixed width for this specific button.
+  ///
+  /// When provided, this overrides the button's natural content-based width.
+  final double? width;
+
   // ── Effective value helpers ──────────────────────────────────────────────
 
+  /// External focus node for keyboard navigation.
   final FocusNode? focusNode;
+
+  /// Whether this button should focus itself on mount.
   final bool autofocus;
+
+  /// Callback fired when focus state changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Accessibility label for this action.
   final String? semanticLabel;
+
+  /// Whether to show a ripple/splash effect and haptic feedback on press.
+  ///
+  /// Falls back to the group's [enableFeedback] if null.
+  final bool? enableFeedback;
 }
 
 // ---------------------------------------------------------------------------
@@ -166,11 +194,13 @@ class M3EToggleButtonGroup extends StatefulWidget {
     /// Defaults to `true`. Set to `false` to opt out.
     this.neighborSquish = true,
 
-    /// How many logical pixels the pressed button grows (and each neighbor
-    /// shrinks by half). Defaults to 8 dp.
-    this.expandBy = 8.0,
+    /// The ratio by which a pressed button expands relative to its natural width.
+    /// Neighbors shrink proportionally to accommodate the expansion.
+    /// Defaults to `0.15`.
+    this.expandedRatio = 0.15,
 
     this.haptic = M3EHapticFeedback.none,
+    this.enableFeedback = true,
 
     this.decoration,
 
@@ -180,10 +210,10 @@ class M3EToggleButtonGroup extends StatefulWidget {
     this.clipBehavior = Clip.none,
     this.overflow = M3EButtonGroupOverflow.scroll,
     this.overflowIcon,
-    this.overflowDropdownDecoration = const M3EOverflowDropdownDecoration(),
+    this.overflowPopupDecoration = const M3EOverflowPopupDecoration(),
     this.overflowBottomSheetDecoration =
         const M3EOverflowBottomSheetDecoration(),
-    this.overflowMenuStyle = M3EButtonGroupOverflowMenuStyle.dropdown,
+    this.overflowMenuStyle = M3EButtonGroupOverflowMenuStyle.popup,
 
     /// Custom overflow strategy for advanced use cases.
     ///
@@ -219,25 +249,83 @@ class M3EToggleButtonGroup extends StatefulWidget {
     this.overflowStrategy,
   });
 
+  /// List of actions displayed as toggle buttons in the group.
   final List<M3EToggleButtonGroupAction> actions;
 
+  /// How buttons in the group are visually connected.
+  ///
+  /// See [M3EButtonGroupType] for available types (standard, connected).
   final M3EButtonGroupType type;
+
+  /// Corner radius strategy for buttons in the group.
+  ///
+  /// See [M3EButtonShape] for available shapes (round, square).
   final M3EButtonShape shape;
+
+  /// Size variant for buttons in the group.
+  ///
+  /// See [M3EButtonSize] for available sizes (xs, sm, md, lg, xl).
   final M3EButtonSize size;
+
+  /// Visual style for buttons in the group.
+  ///
+  /// See [M3EButtonStyle] for available styles (filled, outlined, tonal, etc.).
   final M3EButtonStyle style;
+
+  /// Spacing compactness between adjacent buttons.
+  ///
+  /// See [M3EButtonGroupDensity] for available densities.
   final M3EButtonGroupDensity density;
+
+  /// Custom spacing between buttons in logical pixels.
+  ///
+  /// When null, uses the default spacing from [density].
   final double? spacing;
+
+  /// Main axis direction for the button group layout.
+  ///
+  /// [Axis.horizontal] for rows, [Axis.vertical] for columns.
   final Axis direction;
 
+  /// Currently selected index in single-select mode.
+  ///
+  /// Use either [selectedIndex] or [selectedIndices], not both.
   final int? selectedIndex;
+
+  /// Currently selected indices in multi-select mode.
+  ///
+  /// Use either [selectedIndex] or [selectedIndices], not both.
   final Set<int>? selectedIndices;
+
+  /// Callback fired when the selection changes in single-select mode.
+  ///
+  /// Emits the new selected index, or null when deselected.
   final ValueChanged<int?>? onSelectedIndexChanged;
+
+  /// Callback fired when the selection changes in multi-select mode.
+  ///
+  /// Emits the new set of selected indices.
   final ValueChanged<Set<int>>? onSelectedIndicesChanged;
 
+  /// Whether neighbors compress when a button is pressed.
+  ///
+  /// When true, the pressed button expands while neighbors compress.
   final bool neighborSquish;
-  final double expandBy;
 
+  /// The ratio by which a pressed button expands relative to its natural width.
+  ///
+  /// Neighbors shrink proportionally to accommodate the expansion.
+  final double expandedRatio;
+
+  /// Haptic feedback intensity for button interactions.
+  ///
+  /// See [M3EHapticFeedback] for available levels.
   final M3EHapticFeedback haptic;
+
+  /// Whether to show a ripple/splash effect and native haptic feedback on press.
+  ///
+  /// Defaults to true.
+  final bool enableFeedback;
 
   /// Optional group-level decoration that bundles styling properties together.
   ///
@@ -247,24 +335,29 @@ class M3EToggleButtonGroup extends StatefulWidget {
 
   // ── Effective value helpers ──────────────────────────────────────────────
 
+  /// Accessibility label for the entire button group.
   final String? semanticLabel;
 
   /// Clip behavior for the group container. Defaults to [Clip.none].
   final Clip clipBehavior;
 
   /// Overflow management behavior when [direction] is constrained.
+  ///
+  /// See [M3EButtonGroupOverflow] for available modes.
   final M3EButtonGroupOverflow overflow;
 
   /// Icon for overflow triggers when [overflow] is menu or paging.
   final Widget? overflowIcon;
 
-  /// Decoration for the overflow dropdown menu.
-  final M3EOverflowDropdownDecoration overflowDropdownDecoration;
+  /// Decoration for the overflow popup menu.
+  final M3EOverflowPopupDecoration overflowPopupDecoration;
 
   /// Decoration for the overflow bottom sheet.
   final M3EOverflowBottomSheetDecoration overflowBottomSheetDecoration;
 
   /// How to display the overflow menu when [overflow] == menu.
+  ///
+  /// See [M3EButtonGroupOverflowMenuStyle] for available styles.
   final M3EButtonGroupOverflowMenuStyle overflowMenuStyle;
 
   /// Custom overflow strategy for advanced use cases.
@@ -283,19 +376,18 @@ class M3EToggleButtonGroup extends StatefulWidget {
 // State
 // ---------------------------------------------------------------------------
 
-class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
+class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup>
+    with SingleTickerProviderStateMixin, _ToggleGroupOverflowPresenterMixin {
   late List<WidgetStatesController> _controllers;
   late List<FocusNode?> _focusNodes;
   late int _layoutSignature;
   late int _focusNodeSignature;
   late final M3EButtonGroupOverflowController _overflowController;
+  late final _ToggleGroupPressCoordinator _pressCoordinator;
+  late final _ToggleGroupMeasurementOrchestrator _measurement;
   int? _lastOverflowSelectionIndex;
 
-  final ValueNotifier<int?> _pressedIndexNotifier = ValueNotifier<int?>(null);
   final ValueNotifier<int?> _focusedIndexNotifier = ValueNotifier<int?>(null);
-  double _pressProgress = 0.0;
-  bool _isWaitingForRelease = false;
-  Duration? _releaseDeadline;
 
   // P0-8: Directionality read once per build and reused by every
   // _buildButton call — avoids N InheritedWidget lookups per frame.
@@ -303,23 +395,27 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
 
   // Generation counter to ensure asynchronous remeasure callbacks do not
   // apply stale measurements if the actions or layout have since changed.
-  int _measurementGeneration = 0;
+  int get _measurementGeneration => _measurement.generation;
+  set _measurementGeneration(int value) => _measurement.generation = value;
 
   // Track currently focused index for keyboard navigation
   int _focusedIndex = 0;
 
   /// One GlobalKey per action slot for unchecked state measurement.
-  late List<GlobalKey> _uncheckedKeys;
+  List<GlobalKey> get _uncheckedKeys => _measurement.uncheckedKeys;
 
   /// One GlobalKey per action slot for checked state measurement.
-  late List<GlobalKey> _checkedKeys;
+  List<GlobalKey> get _checkedKeys => _measurement.checkedKeys;
 
   /// Measured natural widths indexed by action slot.
-  late List<double?> _measuredUncheckedWidths;
-  late List<double?> _measuredCheckedWidths;
+  List<double?> get _measuredUncheckedWidths =>
+      _measurement.measuredUncheckedWidths;
+  List<double?> get _measuredCheckedWidths =>
+      _measurement.measuredCheckedWidths;
 
   /// True when any action in the current actions list has a label.
-  bool _hasAnyLabel = false;
+  bool get _hasAnyLabel => _measurement.hasAnyLabel;
+  set _hasAnyLabel(bool value) => _measurement.hasAnyLabel = value;
 
   /// Cached height used as the fallback natural size for icon-only buttons
   /// before measurement completes. Recomputed in [didChangeDependencies] and
@@ -333,15 +429,10 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
   // buttons. Because no listeners are attached to these controllers, press/hover
   // events in the measurer never fire notifications that propagate into
   // _M3EToggleButtonGroupState and cause spurious remeasure cycles.
-  List<WidgetStatesController>? _measurerUncheckedControllers;
-  List<WidgetStatesController>? _measurerCheckedControllers;
-
   bool get _supportsAnimatedSquish =>
       widget.direction == Axis.horizontal &&
       !widget._connected &&
       widget.neighborSquish;
-
-  bool get _needsLabelMeasurement => _supportsAnimatedSquish && _hasAnyLabel;
 
   bool _computeHasAnyLabel() => widget.actions.any(
     (action) => action.label != null || action.checkedLabel != null,
@@ -352,46 +443,18 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
   }
 
   void _initMeasurementState() {
-    _uncheckedKeys = List.generate(widget.actions.length, (_) => GlobalKey());
-    _checkedKeys = List.generate(widget.actions.length, (_) => GlobalKey());
-    _measuredUncheckedWidths = List.filled(widget.actions.length, null);
-    _measuredCheckedWidths = List.filled(widget.actions.length, null);
-    // Reset stable overflow sentinel — layout changed, old extents are stale.
-    _overflowController.stableAllOverflowMeasured.value = false;
-    // Recreate isolated measurer controllers for the new action count.
-    _disposeMeasurerControllers();
-    _initMeasurerControllers();
-  }
-
-  void _initMeasurerControllers() {
-    _measurerUncheckedControllers = List.generate(
-      widget.actions.length,
-      (_) => WidgetStatesController(), // empty, no listeners added
-    );
-    _measurerCheckedControllers = List.generate(
-      widget.actions.length,
-      (_) => WidgetStatesController(),
+    _measurement.initMeasurementState(
+      actionCount: widget.actions.length,
+      overflowController: _overflowController,
     );
   }
 
   void _disposeMeasurerControllers() {
-    if (_measurerUncheckedControllers != null) {
-      for (final c in _measurerUncheckedControllers!) {
-        c.dispose();
-      }
-      _measurerUncheckedControllers = null;
-    }
-    if (_measurerCheckedControllers != null) {
-      for (final c in _measurerCheckedControllers!) {
-        c.dispose();
-      }
-      _measurerCheckedControllers = null;
-    }
+    _measurement.disposeMeasurerControllers();
   }
 
   bool _isMeasured(int index) {
-    return _measuredUncheckedWidths[index] != null &&
-        _measuredCheckedWidths[index] != null;
+    return _measurement.isMeasured(index);
   }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -401,6 +464,8 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
   @override
   void initState() {
     super.initState();
+    _measurement = _ToggleGroupMeasurementOrchestrator();
+    _pressCoordinator = _ToggleGroupPressCoordinator(isMounted: () => mounted);
     _overflowController = M3EButtonGroupOverflowController();
     _overflowController.stableAllOverflowMeasured.addListener(
       _handleOverflowChange,
@@ -541,7 +606,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
     if (lengthChanged) {
       _disposeControllers();
       _initControllers();
-      _pressedIndexNotifier.value = null;
+      _pressCoordinator.clearPressedIndex();
     }
     if (lengthChanged || focusNodesChanged) {
       _disposeFocusNodes();
@@ -579,7 +644,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
       _handleOverflowChange,
     );
     _overflowController.dispose();
-    _pressedIndexNotifier.dispose();
+    _pressCoordinator.dispose();
     _focusedIndexNotifier.dispose();
     _disposeControllers();
     _disposeFocusNodes();
@@ -649,7 +714,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
   }
 
   void _scheduleMeasurementIfNeeded() {
-    if (_needsLabelMeasurement) {
+    if (_hasAnyLabel) {
       final gen = _measurementGeneration;
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => _measureButtonWidths(gen),
@@ -667,6 +732,75 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
     });
   }
 
+  Widget _buildOffstageMeasurer(BuildContext context) {
+    return IgnorePointer(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = 0; i < widget.actions.length; i++)
+            _buildOffstageMeasurerItem(i),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOffstageMeasurerItem(int index) {
+    final action = widget.actions[index];
+
+    if (!_needsDistinctCheckedMeasurement(action)) {
+      return M3EToggleButton(
+        key: _uncheckedKeys[index],
+        style: widget.style,
+        size: _mapSize(widget.size, actionWidth: action.width),
+        decoration: widget.decoration,
+        icon: action.icon,
+        label: action.label,
+        checked: false,
+        checkedIcon: action.checkedIcon,
+        checkedLabel: action.checkedLabel,
+        enabled: action.enabled,
+        enableFeedback: action.enableFeedback ?? widget.enableFeedback,
+        onCheckedChange: (_) {},
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        M3EToggleButton(
+          key: _uncheckedKeys[index],
+          style: widget.style,
+          size: _mapSize(widget.size, actionWidth: action.width),
+          decoration: widget.decoration,
+          icon: action.icon,
+          label: action.label,
+          checked: false,
+          checkedIcon: action.checkedIcon,
+          checkedLabel: action.checkedLabel,
+          enabled: action.enabled,
+          enableFeedback: action.enableFeedback ?? widget.enableFeedback,
+          onCheckedChange: (_) {},
+        ),
+        M3EToggleButton(
+          key: _checkedKeys[index],
+          style: widget.style,
+          size: _mapSize(widget.size, actionWidth: action.width),
+          decoration: widget.decoration,
+          icon: action.icon,
+          label: action.checkedLabel ?? action.label,
+          checked: true,
+          checkedIcon: action.checkedIcon,
+          checkedLabel: action.checkedLabel,
+          enabled: action.enabled,
+          enableFeedback: action.enableFeedback ?? widget.enableFeedback,
+          onCheckedChange: (_) {},
+        ),
+      ],
+    );
+  }
+
   void _disposeControllers() {
     for (final c in _controllers) {
       c.dispose();
@@ -675,32 +809,17 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
   }
 
   void _initFocusNodes() {
-    _focusNodes = List<FocusNode?>.generate(widget.actions.length, (i) {
-      final actionNode = widget.actions[i].focusNode;
-      if (actionNode != null) {
-        return null;
-      }
-
-      final internalNode = FocusNode(
-        debugLabel: 'M3EToggleButtonGroup Button $i',
-      );
-      return internalNode;
-    });
+    _focusNodes = _ToggleGroupFocusManager.buildInternalFocusNodes(
+      widget.actions,
+    );
   }
 
   void _disposeFocusNodes() {
-    for (final node in _focusNodes) {
-      node?.dispose();
-    }
-    _focusNodes.clear();
+    _ToggleGroupFocusManager.disposeInternalFocusNodes(_focusNodes);
   }
 
   int _computeFocusNodeSignature(List<M3EToggleButtonGroupAction> actions) {
-    int hash = 0;
-    for (final action in actions) {
-      hash = Object.hash(hash, action.focusNode);
-    }
-    return hash;
+    return _ToggleGroupFocusManager.computeFocusNodeSignature(actions);
   }
 
   int _computeLayoutSignature(M3EToggleButtonGroup group) {
@@ -721,7 +840,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
     return Object.hash(
       group.direction,
       group.neighborSquish,
-      group.expandBy,
+      group.expandedRatio,
       group.overflow,
       group.overflowMenuStyle,
       styleHash,
@@ -758,36 +877,21 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
         old.density != next.density ||
         old.direction != next.direction ||
         old.neighborSquish != next.neighborSquish ||
-        old.expandBy != next.expandBy ||
+        old.expandedRatio != next.expandedRatio ||
         old.overflow != next.overflow ||
         old.overflowMenuStyle != next.overflowMenuStyle ||
         old.decoration != next.decoration;
   }
 
   void _focusNextButton(int currentIndex, int direction) {
-    if (widget.actions.isEmpty) return;
-    int nextIndex = currentIndex + direction;
-    final int start = nextIndex;
-
-    // Wrap around logic while skipping disabled buttons
-    while (true) {
-      if (nextIndex < 0) {
-        nextIndex = widget.actions.length - 1;
-      } else if (nextIndex >= widget.actions.length) {
-        nextIndex = 0;
-      }
-
-      if (widget.actions[nextIndex].enabled) break;
-
-      nextIndex += direction;
-      // Looped back to where we started and no enabled button found
-      if (nextIndex == start || nextIndex == currentIndex) return;
-    }
-
-    if (nextIndex >= 0 && nextIndex < widget.actions.length) {
-      (widget.actions[nextIndex].focusNode ?? _focusNodes[nextIndex])
-          ?.requestFocus();
-    }
+    final nextIndex = _ToggleGroupFocusManager.nextEnabledIndex(
+      widget.actions,
+      currentIndex: currentIndex,
+      direction: direction,
+    );
+    if (nextIndex == null) return;
+    (widget.actions[nextIndex].focusNode ?? _focusNodes[nextIndex])
+        ?.requestFocus();
   }
 
   // ── Press tracking ────────────────────────────────────────────────────────
@@ -797,14 +901,10 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
 
     // Press tracking for neighbor squish
     final isPressed = c.value.contains(WidgetState.pressed);
-    if (isPressed && _pressedIndexNotifier.value != index) {
-      _isWaitingForRelease = false;
-      _releaseDeadline = null;
-      _setPressedIndex(index);
-    } else if (!isPressed && _pressedIndexNotifier.value == index) {
-      _isWaitingForRelease = true;
-      _scheduleReleaseCheck();
-    }
+    _pressCoordinator.handlePressedStateChange(
+      index: index,
+      isPressed: isPressed,
+    );
 
     // Focus tracking for connected gap expansion
     final isFocused = c.value.contains(WidgetState.focused);
@@ -833,65 +933,13 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
     }
   }
 
-  void _scheduleReleaseCheck() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _releaseDeadline =
-          SchedulerBinding.instance.currentFrameTimeStamp +
-          ButtonConstants.kReleaseTimeout;
-      _checkRelease();
-    });
-  }
-
-  void _checkRelease() {
-    if (!_isWaitingForRelease || !mounted) return;
-    final timedOut =
-        _releaseDeadline != null &&
-        SchedulerBinding.instance.currentFrameTimeStamp >= _releaseDeadline!;
-    if (_pressProgress >= ButtonConstants.kPressReleaseThreshold || timedOut) {
-      _isWaitingForRelease = false;
-      _releaseDeadline = null;
-      _pressProgress = 0.0;
-      _setPressedIndex(null);
-    }
-  }
-
-  void _setPressedIndex(int? index) {
-    if (SchedulerBinding.instance.schedulerPhase ==
-        SchedulerPhase.persistentCallbacks) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _pressedIndexNotifier.value = index;
-      });
-    } else {
-      _pressedIndexNotifier.value = index;
-    }
-  }
-
-  void _onProgressUpdate(double progress) {
-    _pressProgress = progress;
-    if (_isWaitingForRelease) _checkRelease();
-  }
-
   // ── Keyboard navigation via Shortcuts/Actions ─────────────────────────────
 
   Map<ShortcutActivator, Intent> get _arrowKeyShortcuts {
-    final int rtlFlip = _isRtl ? -1 : 1;
-    if (widget.direction == Axis.horizontal) {
-      return {
-        const SingleActivator(LogicalKeyboardKey.arrowRight): _MoveFocusIntent(
-          1 * rtlFlip,
-        ),
-        const SingleActivator(LogicalKeyboardKey.arrowLeft): _MoveFocusIntent(
-          -1 * rtlFlip,
-        ),
-      };
-    }
-    return {
-      const SingleActivator(LogicalKeyboardKey.arrowDown):
-          const _MoveFocusIntent(1),
-      const SingleActivator(LogicalKeyboardKey.arrowUp): const _MoveFocusIntent(
-        -1,
-      ),
-    };
+    return _ToggleGroupKeyboardConfig.arrowKeyShortcuts(
+      direction: widget.direction,
+      isRtl: _isRtl,
+    );
   }
 
   void _focusNextButtonFromFocused(int direction) {
@@ -901,14 +949,32 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
   // ── Natural size helpers (FEAT-07) ────────────────────────────────────────
 
   double _naturalSizeForButton(BuildContext context, int index) {
-    if (index < 0 || index >= _measuredUncheckedWidths.length) {
+    if (index < 0 || index >= widget.actions.length) {
       return _iconOnlyNaturalSizeCache;
+    }
+
+    final action = widget.actions[index];
+    if (action.width != null) {
+      return action.width!;
+    }
+
+    if (index >= _measuredUncheckedWidths.length) {
+      return _iconOnlyNaturalSizeCache;
+    }
+
+    final uncheckedWidth =
+        _measuredUncheckedWidths[index] ?? _iconOnlyNaturalSizeCache;
+    final checkedWidth = _measuredCheckedWidths[index] ?? uncheckedWidth;
+
+    // In standard groups, reserve the larger checked/unchecked width when
+    // content differs so selection changes do not hard-snap the button width.
+    if (!widget._connected && _needsDistinctCheckedMeasurement(action)) {
+      return math.max(uncheckedWidth, checkedWidth);
     }
 
     final bool checked = _isToggleActionSelected(index);
 
-    final widths = checked ? _measuredCheckedWidths : _measuredUncheckedWidths;
-    return widths[index] ?? _iconOnlyNaturalSizeCache;
+    return checked ? checkedWidth : uncheckedWidth;
   }
 
   // ── debugFillProperties ───────────────────────────────────────────────────
@@ -950,7 +1016,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
     // Read directionality once — shared by all _buildButton calls.
     _isRtl = Directionality.of(context) == TextDirection.rtl;
 
-    final group = M3EButtonGroupProvider(
+    Widget group = M3EButtonGroupProvider(
       controller: _overflowController,
       child: M3EButtonGroupScope(
         type: widget.type,
@@ -961,6 +1027,17 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
         child: _buildContent(context, spacing),
       ),
     );
+
+    if (_hasAnyLabel) {
+      group = Stack(
+        children: [
+          group,
+          Positioned.fill(
+            child: Opacity(opacity: 0, child: _buildOffstageMeasurer(context)),
+          ),
+        ],
+      );
+    }
 
     Widget result = Shortcuts(
       shortcuts: _arrowKeyShortcuts,
@@ -978,71 +1055,6 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
         ),
       ),
     );
-
-    // FEAT-07: Offstage measurer — renders labeled buttons unconstrained so
-    // _measureButtonWidths reads true natural widths, never animated widths.
-    // Only built when any action has a label.
-    if (_needsLabelMeasurement) {
-      final measurer = ExcludeFocus(
-        child: ExcludeSemantics(
-          child: Offstage(
-            offstage: true,
-            child: RepaintBoundary(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (int i = 0; i < widget.actions.length; i++)
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Unchecked state — inert statesController prevents any
-                        // internal interaction state from propagating up to the
-                        // group state and triggering spurious remeasure rebuilds.
-                        M3EToggleButton(
-                          key: _uncheckedKeys[i],
-                          checked: false,
-                          icon: widget.actions[i].icon,
-                          checkedIcon: widget.actions[i].checkedIcon,
-                          label: widget.actions[i].label,
-                          checkedLabel: widget.actions[i].checkedLabel,
-                          onCheckedChange: (_) {},
-                          style: widget.style,
-                          size: _mapSize(widget.size),
-                          decoration: M3EToggleButtonDecoration(
-                            size:
-                                widget.actions[i].decoration?.size ??
-                                widget.decoration?.size,
-                          ),
-                          statesController: _measurerUncheckedControllers?[i],
-                        ),
-                        if (_needsDistinctCheckedMeasurement(widget.actions[i]))
-                          M3EToggleButton(
-                            key: _checkedKeys[i],
-                            checked: true,
-                            icon: widget.actions[i].icon,
-                            checkedIcon: widget.actions[i].checkedIcon,
-                            label: widget.actions[i].label,
-                            checkedLabel: widget.actions[i].checkedLabel,
-                            onCheckedChange: (_) {},
-                            style: widget.style,
-                            size: _mapSize(widget.size),
-                            decoration: M3EToggleButtonDecoration(
-                              size:
-                                  widget.actions[i].decoration?.size ??
-                                  widget.decoration?.size,
-                            ),
-                            statesController: _measurerCheckedControllers?[i],
-                          ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-      result = Stack(children: [result, measurer]);
-    }
 
     // Apply an outer clip only when the caller opts into clipping.
     if (widget.clipBehavior != Clip.none) {
@@ -1100,7 +1112,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
         if (maxMain.isFinite) {
           final hasMeasurements =
               _overflowController.stableAllOverflowMeasured.value ||
-              !_needsLabelMeasurement ||
+              !_hasAnyLabel ||
               _allOverflowExtentsMeasured();
 
           // If we have extents, compute the visible count safely
@@ -1110,11 +1122,11 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
                 _itemMainExtentForOverflow(context, i),
             ];
 
-            // Estimate the trigger. Since we can't reliably predict the size of
-            // a custom strategy's trigger until it's built, we fall back to a
-            // standard icon-only measurement.
+            // Estimate the trigger. If the strategy provides an explicit extent, use it.
+            // Otherwise, we can't reliably predict the size of a custom strategy's trigger
+            // until it's built, so we fall back to a standard icon-only measurement.
             triggerExtent = M3EButtonGroupOverflowController.roundConsumed(
-              _defaultOverflowTriggerExtent(),
+              strategy.triggerExtent ?? _defaultOverflowTriggerExtent(),
             );
 
             visibleCount = _overflowController.computeVisibleCountForMenu(
@@ -1236,22 +1248,6 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
     final count = widget.actions.length;
     final squishEnabled = _supportsAnimatedSquish;
 
-    final naturalSizes = squishEnabled
-        ? [for (int i = 0; i < count; i++) _naturalSizeForButton(context, i)]
-        : const <double>[];
-
-    final totalNaturalWidth = squishEnabled
-        ? naturalSizes.fold(0.0, (s, w) => s + w) +
-              (count > 1 ? spacing * (count - 1) : 0.0)
-        : 0.0;
-
-    final slack = squishEnabled && maxMain.isFinite
-        ? (maxMain - totalNaturalWidth).clamp(0.0, double.infinity)
-        : double.infinity;
-    final clampedExpandBy = slack.isFinite
-        ? widget.expandBy.clamp(0.0, slack)
-        : widget.expandBy;
-
     final children = <Widget>[];
     for (var i = 0; i < count; i++) {
       final button = _buildButton(context, i, i == 0, i == count - 1);
@@ -1261,36 +1257,47 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
         child: button,
       );
 
-      final item = (squishEnabled && (!_hasAnyLabel || _isMeasured(i)))
-          ? RepaintBoundary(
-              child: _AnimatedWidthToggle(
-                key: ValueKey('awt_$i'),
-                pressedIndexNotifier: _pressedIndexNotifier,
-                index: i,
-                expandBy: clampedExpandBy,
-                naturalSize: naturalSizes[i],
-                maxWidth: maxMain.isFinite
-                    ? naturalSizes[i] + slack
-                    : double.infinity,
-                motion:
-                    widget.decoration?.motion ?? M3EMotion.standardSpatialFast,
-                onProgressUpdate: _onProgressUpdate,
-                child: scoped,
-              ),
-            )
-          : scoped;
-
       children.add(
         _repaintButton(
-          KeyedSubtree(key: ValueKey('toggle-item-$i'), child: item),
+          KeyedSubtree(key: ValueKey('toggle-item-$i'), child: scoped),
         ),
       );
-      if (i < count - 1) {
-        children.add(_buildGap(context, i, spacing));
-      }
     }
 
-    return _axisFlex(children);
+    if (!squishEnabled) {
+      final flexChildren = <Widget>[];
+      for (var i = 0; i < count; i++) {
+        flexChildren.add(children[i]);
+        if (i < count - 1) {
+          flexChildren.add(_buildGap(context, i, spacing));
+        }
+      }
+      return _axisFlex(flexChildren);
+    }
+
+    return ValueListenableBuilder<int?>(
+      valueListenable: _pressCoordinator.pressedIndexNotifier,
+      builder: (context, pressedIndex, _) {
+        return SingleMotionBuilder(
+          motion:
+              widget.decoration?.motion?.toMotion() ??
+              M3EMotion.expressiveSpatialDefault.toMotion(),
+          value: pressedIndex != null ? 1.0 : 0.0,
+          builder: (context, animValue, _) {
+            _pressCoordinator.onAnimationProgress(animValue);
+
+            return _ButtonGroupRenderObjectWidget(
+              direction: widget.direction,
+              spacing: spacing,
+              pressedIndex: _pressCoordinator.lastPressedIndex,
+              animValue: animValue,
+              expandedRatio: widget.expandedRatio,
+              children: children,
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget _linearScrollable(BuildContext context, double spacing) {
@@ -1331,7 +1338,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
         // `_overflowController.stableAllOverflowMeasured.value` is only cleared on genuine layout changes.
         final hasMeasurements =
             _overflowController.stableAllOverflowMeasured.value ||
-            !_needsLabelMeasurement ||
+            !_hasAnyLabel ||
             _allOverflowExtentsMeasured();
 
         if (!hasMeasurements) {
@@ -1359,8 +1366,9 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
         final visibleItems = <Widget>[];
         final visibleScopeCount = visibleCount + 1;
         for (int i = 0; i < visibleCount; i++) {
-          if (visibleItems.isNotEmpty)
+          if (visibleItems.isNotEmpty) {
             visibleItems.add(_buildGap(context, i - 1, spacing));
+          }
           visibleItems.add(
             _repaintButton(
               KeyedSubtree(
@@ -1375,8 +1383,9 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
           );
         }
 
-        if (visibleItems.isNotEmpty)
+        if (visibleItems.isNotEmpty) {
           visibleItems.add(_buildGap(context, visibleCount - 1, spacing));
+        }
         visibleItems.add(
           _repaintButton(
             _buildOverflowMenuTrigger(
@@ -1406,7 +1415,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
         // one-frame flash to _linearScrollable during interaction rebuilds.
         final hasMeasurements =
             _overflowController.stableAllOverflowMeasured.value ||
-            (!_needsLabelMeasurement) ||
+            (!_hasAnyLabel) ||
             _allOverflowExtentsMeasured();
 
         if (!hasMeasurements) {
@@ -1453,8 +1462,9 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
             }
 
             for (int i = pagingWindow.start; i <= pagingWindow.end; i++) {
-              if (visibleItems.isNotEmpty)
+              if (visibleItems.isNotEmpty) {
                 visibleItems.add(_buildGap(context, i - 1, spacing));
+              }
               final isLastVisible =
                   i == pagingWindow.end && !pagingWindow.needsForward;
               visibleItems.add(
@@ -1477,8 +1487,9 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
             }
 
             if (pagingWindow.needsForward) {
-              if (visibleItems.isNotEmpty)
+              if (visibleItems.isNotEmpty) {
                 visibleItems.add(_buildGap(context, pagingWindow.end, spacing));
+              }
               visibleItems.add(
                 _repaintButton(
                   KeyedSubtree(
@@ -1510,18 +1521,12 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
     return ValueListenableBuilder<int?>(
       valueListenable: _focusedIndexNotifier,
       builder: (context, focusedIndex, _) {
-        double gap = widget._connected
-            ? ButtonGroupTokens.kConnectedGap
-            : spacing;
-
-        if (widget._connected) {
-          final bool isFocusedLeft = focusedIndex == beforeIndex;
-          final bool isFocusedRight = focusedIndex == beforeIndex + 1;
-          if (isFocusedLeft || isFocusedRight) {
-            gap +=
-                ButtonConstants.kFocusRingGap + ButtonConstants.kFocusRingWidth;
-          }
-        }
+        final gap = _FocusRingGapRenderer.resolveGap(
+          connected: widget._connected,
+          focusedIndex: focusedIndex,
+          beforeIndex: beforeIndex,
+          spacing: spacing,
+        );
 
         final double width = widget.direction == Axis.horizontal ? gap : 0;
         final double height = widget.direction == Axis.vertical ? gap : 0;
@@ -1561,7 +1566,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
     final tokens = M3EButtonTokensAdapter(context);
     tokens.didChangeDependencies();
     final measurements = tokens.measurements(
-      _mapSize(widget.size),
+      _mapSize(widget.size, actionWidth: widget.actions[index].width),
       override:
           widget.actions[index].decoration?.size ?? widget.decoration?.size,
     );
@@ -1657,662 +1662,13 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
           isFirstInGroup: isFirst,
           isLastInGroup: isLast,
           semanticLabel: semanticLabel,
+          enableFeedback: widget.enableFeedback,
         ),
       ),
     );
   }
 
-  Future<void> _openOverflowMenu(
-    BuildContext context,
-    int firstHiddenIndex,
-  ) async {
-    if (firstHiddenIndex >= widget.actions.length) return;
-    final selectedIndex = switch (widget.overflowMenuStyle) {
-      M3EButtonGroupOverflowMenuStyle.dropdown => _showOverflowDropdown(
-        context,
-        firstHiddenIndex,
-      ),
-      M3EButtonGroupOverflowMenuStyle.bottomSheet => _showOverflowBottomSheet(
-        context,
-        firstHiddenIndex,
-      ),
-    };
-    final result = await selectedIndex;
-    if (!mounted || result == null) return;
-    _handleOverflowActionSelection(result);
-  }
-
-  Future<int?> _showOverflowDropdown(
-    BuildContext context,
-    int firstHiddenIndex,
-  ) async {
-    final triggerBox = context.findRenderObject() as RenderBox?;
-    if (triggerBox == null) return null;
-
-    final screenSize = MediaQuery.of(context).size;
-    final triggerTopLeft = triggerBox.localToGlobal(Offset.zero);
-    final triggerBottomRight = triggerBox.localToGlobal(
-      triggerBox.size.bottomRight(Offset.zero),
-    );
-    final theme = Theme.of(context);
-
-    final cs = theme.colorScheme;
-
-    final dec = widget.overflowDropdownDecoration;
-
-    final menuWidth = (triggerBox.size.width + 176.0).clamp(
-      dec.minWidth,
-      dec.maxWidth,
-    );
-
-    final spaceBelow =
-        screenSize.height -
-        triggerBottomRight.dy -
-        ButtonConstants.kScreenEdgePadding;
-    final spaceAbove = triggerTopLeft.dy - ButtonConstants.kScreenEdgePadding;
-
-    final approxHeight = ((widget.actions.length - firstHiddenIndex) * 60.0)
-        .clamp(96.0, dec.maxHeight);
-    final showAbove = spaceBelow < approxHeight && spaceAbove > spaceBelow;
-
-    final menuRadius =
-        widget.decoration?.checkedRadius ??
-        widget.decoration?.uncheckedRadius ??
-        20.0;
-
-    double left = triggerBottomRight.dx - menuWidth;
-    left += dec.offset.dx;
-    left = left.clamp(
-      ButtonConstants.kScreenEdgePadding,
-      screenSize.width - menuWidth - ButtonConstants.kScreenEdgePadding,
-    );
-
-    final bool isClampedToLeft = left <= ButtonConstants.kScreenEdgePadding;
-    final alignment = Alignment(
-      isClampedToLeft ? -1.0 : 1.0,
-      showAbove ? 1.0 : -1.0,
-    );
-
-    final itemCount = widget.actions.length - firstHiddenIndex;
-
-    return showGeneralDialog<int>(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 160),
-      pageBuilder: (dialogContext, _, _) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => Navigator.of(dialogContext).pop(),
-              ),
-            ),
-            Positioned(
-              left: left,
-              top: showAbove ? null : triggerBottomRight.dy + dec.offset.dy,
-              bottom: showAbove
-                  ? screenSize.height - triggerTopLeft.dy + dec.offset.dy
-                  : null,
-              width: menuWidth,
-              child: _SpringMenuWrapper(
-                motion: dec.motion,
-                alignment: alignment,
-                child: FocusScope(
-                  autofocus: true,
-                  child: Material(
-                    color: dec.backgroundColor ?? cs.surfaceContainer,
-                    surfaceTintColor: Colors.transparent,
-                    elevation: dec.elevation,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          dec.borderRadius ?? BorderRadius.circular(menuRadius),
-                      side:
-                          dec.border ??
-                          BorderSide(
-                            color: cs.outlineVariant.withValues(alpha: 0.7),
-                          ),
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: (showAbove ? spaceAbove : spaceBelow).clamp(
-                          0.0,
-                          dec.maxHeight,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: dec.useCardList
-                                ? _buildCardListItems(
-                                    dialogContext,
-                                    firstHiddenIndex,
-                                    itemCount,
-                                    dec,
-                                    cs,
-                                  )
-                                : _buildStandardListItems(
-                                    dialogContext,
-                                    firstHiddenIndex,
-                                    itemCount,
-                                    dec,
-                                    cs,
-                                  ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-      transitionBuilder: (context, animation, _, child) {
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-        );
-
-        return FadeTransition(opacity: curved, child: child);
-      },
-    );
-  }
-
-  Widget _buildCardListItems(
-    BuildContext context,
-    int firstHiddenIndex,
-    int itemCount,
-    M3EOverflowDropdownDecoration dec,
-    ColorScheme cs,
-  ) {
-    final outerR = dec.outerRadius;
-    final innerR = dec.innerRadius;
-    final selectedR = dec.selectedBorderRadius ?? outerR;
-
-    return ListView.separated(
-      padding: dec.padding,
-      shrinkWrap: true,
-      itemCount: itemCount,
-      separatorBuilder: (_, _) => SizedBox(height: dec.itemGap),
-      itemBuilder: (context, listIndex) {
-        final actionIndex = firstHiddenIndex + listIndex;
-        return _buildCardListItem(
-          context,
-          actionIndex,
-          listIndex,
-          itemCount,
-          dec,
-          cs,
-          outerR,
-          innerR,
-          selectedR,
-        );
-      },
-    );
-  }
-
-  Widget _buildCardListItem(
-    BuildContext context,
-    int actionIndex,
-    int listIndex,
-    int total,
-    M3EOverflowDropdownDecoration dec,
-    ColorScheme cs,
-    double outerR,
-    double innerR,
-    double selectedR,
-  ) {
-    final action = widget.actions[actionIndex];
-    final selected = _isToggleActionSelected(actionIndex);
-
-    final isFirst = listIndex == 0;
-    final isLast = listIndex == total - 1;
-    final isSingle = total == 1;
-
-    BorderRadius borderRadius;
-    if (selected) {
-      borderRadius = BorderRadius.circular(selectedR);
-    } else if (isSingle) {
-      borderRadius = BorderRadius.circular(outerR);
-    } else if (isFirst) {
-      borderRadius = BorderRadius.vertical(
-        top: Radius.circular(outerR),
-        bottom: Radius.circular(innerR),
-      );
-    } else if (isLast) {
-      borderRadius = BorderRadius.vertical(
-        top: Radius.circular(innerR),
-        bottom: Radius.circular(outerR),
-      );
-    } else {
-      borderRadius = BorderRadius.circular(innerR);
-    }
-
-    final bgColor = selected
-        ? (dec.selectedBackgroundColor ?? cs.secondaryContainer)
-        : (dec.itemBackgroundColor ?? cs.surfaceContainerHigh);
-
-    return Material(
-      color: bgColor,
-      shape: RoundedRectangleBorder(borderRadius: borderRadius),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: action.enabled
-            ? () => Navigator.of(context).pop(actionIndex)
-            : null,
-        borderRadius: borderRadius,
-        child: Padding(
-          padding: dec.itemPadding,
-          child: Row(
-            children: [
-              IconTheme.merge(
-                data: IconThemeData(
-                  size: 18,
-                  color: selected ? cs.onSecondaryContainer : cs.onSurface,
-                ),
-                child: _overflowMenuLeading(actionIndex),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DefaultTextStyle.merge(
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: selected ? cs.onSecondaryContainer : cs.onSurface,
-                  ),
-                  child: _overflowMenuTitle(actionIndex),
-                ),
-              ),
-              if (selected)
-                dec.trailing ??
-                    Icon(
-                      Icons.check_rounded,
-                      color: cs.onSecondaryContainer,
-                      size: 20,
-                    ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStandardListItems(
-    BuildContext context,
-    int firstHiddenIndex,
-    int itemCount,
-    M3EOverflowDropdownDecoration dec,
-    ColorScheme cs,
-  ) {
-    return ListView.builder(
-      padding: dec.padding,
-      shrinkWrap: true,
-      itemCount: itemCount,
-      itemBuilder: (context, listIndex) {
-        final actionIndex = firstHiddenIndex + listIndex;
-        return _buildStandardListItem(context, actionIndex, dec, cs);
-      },
-    );
-  }
-
-  Widget _buildStandardListItem(
-    BuildContext context,
-    int actionIndex,
-    M3EOverflowDropdownDecoration dec,
-    ColorScheme cs,
-  ) {
-    final action = widget.actions[actionIndex];
-    final selected = _isToggleActionSelected(actionIndex);
-
-    final itemRadius = dec.selectedBorderRadius ?? dec.outerRadius;
-
-    final fgColor = selected
-        ? (widget.decoration?.checkedForegroundColor ?? cs.onSecondaryContainer)
-        : (widget.decoration?.foregroundColor ?? cs.onSurface);
-
-    final bgColor = selected
-        ? (dec.selectedBackgroundColor ?? cs.secondaryContainer)
-        : Colors.transparent;
-
-    return Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: BoxDecoration(
-          color: action.enabled ? bgColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(itemRadius),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(itemRadius),
-          onTap: action.enabled
-              ? () => Navigator.of(context).pop(actionIndex)
-              : null,
-          child: Padding(
-            padding: dec.itemPadding,
-            child: Row(
-              children: [
-                IconTheme.merge(
-                  data: IconThemeData(
-                    size: 18,
-                    color: action.enabled
-                        ? fgColor
-                        : fgColor.withValues(
-                            alpha: ButtonConstants.kDisabledForegroundAlpha,
-                          ),
-                  ),
-                  child: _overflowMenuLeading(actionIndex),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DefaultTextStyle.merge(
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: action.enabled
-                          ? fgColor
-                          : fgColor.withValues(
-                              alpha: ButtonConstants.kDisabledForegroundAlpha,
-                            ),
-                    ),
-                    child: _overflowMenuTitle(actionIndex),
-                  ),
-                ),
-                if (selected)
-                  dec.trailing ??
-                      Icon(Icons.check_rounded, color: fgColor, size: 20),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  ////////////////////////////
-
-  Future<int?> _showOverflowBottomSheet(
-    BuildContext context,
-    int firstHiddenIndex,
-  ) async {
-    final dec = widget.overflowBottomSheetDecoration;
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final itemCount = widget.actions.length - firstHiddenIndex;
-
-    return showModalBottomSheet<int>(
-      context: context,
-      showDragHandle: dec.showDragHandle,
-      backgroundColor: dec.backgroundColor,
-      elevation: dec.elevation,
-      shape: dec.shape,
-      builder: (sheetContext) {
-        return _SpringMenuWrapper(
-          motion: dec.motion,
-          alignment: Alignment.bottomCenter,
-          isBottomSheet: true,
-          child: SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (dec.title != null)
-                    Padding(
-                      padding: dec.titlePadding,
-                      child: DefaultTextStyle.merge(
-                        style: Theme.of(sheetContext).textTheme.titleMedium,
-                        child: dec.title!,
-                      ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: dec.useCardList
-                        ? _buildBottomSheetCardList(
-                            sheetContext,
-                            firstHiddenIndex,
-                            itemCount,
-                            dec,
-                            cs,
-                          )
-                        : _buildBottomSheetStandardList(
-                            sheetContext,
-                            firstHiddenIndex,
-                            itemCount,
-                            dec,
-                            cs,
-                          ),
-                  ),
-
-                  const SizedBox(height: 12),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildBottomSheetCardList(
-    BuildContext sheetContext,
-    int firstHiddenIndex,
-    int itemCount,
-    M3EOverflowBottomSheetDecoration dec,
-    ColorScheme cs,
-  ) {
-    final outerR = dec.outerRadius;
-    final innerR = dec.innerRadius;
-    final selectedR = dec.selectedBorderRadius ?? outerR;
-
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: itemCount,
-      separatorBuilder: (_, _) => SizedBox(height: dec.itemGap),
-      itemBuilder: (context, listIndex) {
-        final actionIndex = firstHiddenIndex + listIndex;
-        return _buildBottomSheetCardListItem(
-          context,
-          actionIndex,
-          listIndex,
-          itemCount,
-          dec,
-          cs,
-          outerR,
-          innerR,
-          selectedR,
-        );
-      },
-    );
-  }
-
-  Widget _buildBottomSheetCardListItem(
-    BuildContext context,
-    int actionIndex,
-    int listIndex,
-    int total,
-    M3EOverflowBottomSheetDecoration dec,
-    ColorScheme cs,
-    double outerR,
-    double innerR,
-    double selectedR,
-  ) {
-    final action = widget.actions[actionIndex];
-    final selected = _isToggleActionSelected(actionIndex);
-
-    final isFirst = listIndex == 0;
-    final isLast = listIndex == total - 1;
-    final isSingle = total == 1;
-
-    BorderRadius borderRadius;
-    if (selected) {
-      borderRadius = BorderRadius.circular(selectedR);
-    } else if (isSingle) {
-      borderRadius = BorderRadius.circular(outerR);
-    } else if (isFirst) {
-      borderRadius = BorderRadius.vertical(
-        top: Radius.circular(outerR),
-        bottom: Radius.circular(innerR),
-      );
-    } else if (isLast) {
-      borderRadius = BorderRadius.vertical(
-        top: Radius.circular(innerR),
-        bottom: Radius.circular(outerR),
-      );
-    } else {
-      borderRadius = BorderRadius.circular(innerR);
-    }
-
-    final bgColor = selected
-        ? (dec.selectedBackgroundColor ?? cs.secondaryContainer)
-        : (dec.itemBackgroundColor ?? cs.surfaceContainerHigh);
-
-    return Material(
-      color: bgColor,
-      shape: RoundedRectangleBorder(borderRadius: borderRadius),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: action.enabled
-            ? () => Navigator.of(context).pop(actionIndex)
-            : null,
-        borderRadius: borderRadius,
-        child: Padding(
-          padding: dec.itemPadding,
-          child: Row(
-            children: [
-              IconTheme.merge(
-                data: IconThemeData(
-                  size: 18,
-                  color: selected ? cs.onSecondaryContainer : cs.onSurface,
-                ),
-                child: _overflowMenuLeading(actionIndex),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DefaultTextStyle.merge(
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: selected ? cs.onSecondaryContainer : cs.onSurface,
-                  ),
-                  child: _overflowMenuTitle(actionIndex),
-                ),
-              ),
-              if (selected)
-                dec.trailing ??
-                    Icon(
-                      Icons.check_rounded,
-                      color: cs.onSecondaryContainer,
-                      size: 20,
-                    ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomSheetStandardList(
-    BuildContext sheetContext,
-    int firstHiddenIndex,
-    int itemCount,
-    M3EOverflowBottomSheetDecoration dec,
-    ColorScheme cs,
-  ) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: itemCount,
-      itemBuilder: (context, listIndex) {
-        final actionIndex = firstHiddenIndex + listIndex;
-        return _buildBottomSheetStandardItem(context, actionIndex, dec, cs);
-      },
-    );
-  }
-
-  Widget _buildBottomSheetStandardItem(
-    BuildContext context,
-    int actionIndex,
-    M3EOverflowBottomSheetDecoration dec,
-    ColorScheme cs,
-  ) {
-    final action = widget.actions[actionIndex];
-    final selected = _isToggleActionSelected(actionIndex);
-
-    final itemRadius = dec.selectedBorderRadius ?? dec.outerRadius;
-
-    final fgColor = selected
-        ? (widget.decoration?.checkedForegroundColor ?? cs.onSecondaryContainer)
-        : (widget.decoration?.foregroundColor ?? cs.onSurface);
-
-    final bgColor = selected
-        ? (dec.selectedBackgroundColor ?? cs.secondaryContainer)
-        : Colors.transparent;
-
-    return Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: BoxDecoration(
-          color: action.enabled ? bgColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(itemRadius),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(itemRadius),
-          onTap: action.enabled
-              ? () => Navigator.of(context).pop(actionIndex)
-              : null,
-          child: Padding(
-            padding: dec.itemPadding,
-            child: Row(
-              children: [
-                IconTheme.merge(
-                  data: IconThemeData(
-                    size: 18,
-                    color: action.enabled
-                        ? fgColor
-                        : fgColor.withValues(
-                            alpha: ButtonConstants.kDisabledForegroundAlpha,
-                          ),
-                  ),
-                  child: _overflowMenuLeading(actionIndex),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DefaultTextStyle.merge(
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: action.enabled
-                          ? fgColor
-                          : fgColor.withValues(
-                              alpha: ButtonConstants.kDisabledForegroundAlpha,
-                            ),
-                    ),
-                    child: _overflowMenuTitle(actionIndex),
-                  ),
-                ),
-                if (selected)
-                  dec.trailing ??
-                      Icon(Icons.check_rounded, color: fgColor, size: 20),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _overflowMenuLeading(int index) {
-    final action = widget.actions[index];
-    final Widget? icon = _isToggleActionSelected(index)
-        ? (action.checkedIcon ?? action.icon)
-        : action.icon;
-    return icon ?? const SizedBox.shrink();
-  }
-
-  Widget _overflowMenuTitle(int index) {
-    final action = widget.actions[index];
-    if (_isToggleActionSelected(index)) {
-      return action.checkedLabel ?? action.label ?? Text('Option ${index + 1}');
-    }
-    return action.label ?? action.checkedLabel ?? Text('Option ${index + 1}');
-  }
-
+  @override
   void _handleOverflowActionSelection(int index) {
     final action = widget.actions[index];
     if (!action.enabled) return;
@@ -2346,6 +1702,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
     }
   }
 
+  @override
   bool _isToggleActionSelected(int index) {
     // Multi-select mode: check if index is in the selected set
     if (widget.selectedIndices != null) {
@@ -2392,7 +1749,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
       checked: checked,
       enabled: action.enabled,
       style: widget.style,
-      size: _mapSize(widget.size),
+      size: _mapSize(widget.size, actionWidth: action.width),
       isGroupConnected: widget._connected,
       isFirstInGroup: isVisualFirst,
       isLastInGroup: isVisualLast,
@@ -2400,6 +1757,7 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
       statesController: _controllers[index],
       focusNode: action.focusNode ?? _focusNodes[index],
       autofocus: action.autofocus,
+      enableFeedback: action.enableFeedback ?? widget.enableFeedback,
       onFocusChange: (focused) {
         if (focused) _focusedIndex = index;
         action.onFocusChange?.call(focused);
@@ -2428,209 +1786,60 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup> {
 
     // Keys are on buttons in the Offstage measurer, not here.
     // Attaching them here would measure inside _AnimatedWidthToggle's SizedBox.
+    if (!widget._connected &&
+        action.width == null &&
+        _needsDistinctCheckedMeasurement(action) &&
+        index < _measuredUncheckedWidths.length) {
+      final uncheckedWidth =
+          _measuredUncheckedWidths[index] ?? _iconOnlyNaturalSizeCache;
+      final checkedWidth = _measuredCheckedWidths[index] ?? uncheckedWidth;
+
+      final motion =
+          (action.decoration?.motion ??
+                  widget.decoration?.motion ??
+                  M3EMotion.expressiveSpatialDefault)
+              .toMotion();
+
+      return SingleMotionBuilder(
+        motion: motion,
+        value: checked ? 1.0 : 0.0,
+        builder: (context, progress, child) {
+          final isShrinkingCollapse = !checked && checkedWidth > uncheckedWidth;
+          // Preserve a small spring overshoot when collapsing so width does
+          // not feel like a linear snap near the end.
+          final p = isShrinkingCollapse
+              ? progress.clamp(-0.45, 1.0)
+              : progress.clamp(0.0, 1.0);
+          final width = uncheckedWidth + ((checkedWidth - uncheckedWidth) * p);
+          return SizedBox(width: width, child: child);
+        },
+        child: button,
+      );
+    }
+
     return button;
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  M3EButtonSize _mapSize(M3EButtonSize s) => switch (s.name) {
-    'xs' => M3EButtonSize.xs,
-    'sm' => M3EButtonSize.sm,
-    'md' => M3EButtonSize.md,
-    'lg' => M3EButtonSize.lg,
-    'xl' => M3EButtonSize.xl,
-    _ => M3EButtonSize.md,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// _AnimatedWidthToggle
-// ---------------------------------------------------------------------------
-//
-// Animates the width of a toggle button during press/neighbor-squish.
-//
-// For icon-only buttons: naturalSize == token height (always known).
-// For labeled buttons:   naturalSize == measured width (from _naturalSizeForButton).
-//
-// The spring animates between three widths:
-//   • pressed  → naturalSize + expandBy
-//   • neighbor → naturalSize - expandBy / 2
-//   • resting  → naturalSize
-
-/// Animates the width of a toggle button during press/neighbor-squish.
-///
-/// Converted to [StatefulWidget] so that [SpringMotion] is resolved once and
-/// cached in state — avoiding a new allocation on every animation frame
-/// (which can fire at ~120 fps on ProMotion devices).
-class _AnimatedWidthToggle extends StatefulWidget {
-  const _AnimatedWidthToggle({
-    super.key,
-    required this.pressedIndexNotifier,
-    required this.index,
-    required this.expandBy,
-    required this.naturalSize,
-    required this.maxWidth,
-    required this.motion,
-    required this.onProgressUpdate,
-    required this.child,
-  });
-
-  final ValueNotifier<int?> pressedIndexNotifier;
-  final int index;
-  final double expandBy;
-  final double naturalSize;
-
-  /// Hard ceiling on the animated width. Prevents spring overshoot from
-  /// producing a width that exceeds the available space in the parent Row.
-  /// Pass [double.infinity] when the parent is unconstrained.
-  final double maxWidth;
-
-  final M3EMotion motion;
-  final ValueChanged<double> onProgressUpdate;
-  final Widget child;
-
-  @override
-  State<_AnimatedWidthToggle> createState() => _AnimatedWidthToggleState();
-}
-
-class _AnimatedWidthToggleState extends State<_AnimatedWidthToggle> {
-  late SpringMotion _springMotion;
-
-  @override
-  void initState() {
-    super.initState();
-    _springMotion = widget.motion.toMotion();
-  }
-
-  @override
-  void didUpdateWidget(_AnimatedWidthToggle old) {
-    super.didUpdateWidget(old);
-    if (widget.motion != old.motion) {
-      _springMotion = widget.motion.toMotion();
+  M3EButtonSize _mapSize(M3EButtonSize s, {double? actionWidth}) {
+    final base = switch (s.name) {
+      'xs' => M3EButtonSize.xs,
+      'sm' => M3EButtonSize.sm,
+      'md' => M3EButtonSize.md,
+      'lg' => M3EButtonSize.lg,
+      'xl' => M3EButtonSize.xl,
+      _ => M3EButtonSize.md,
+    };
+    if (actionWidth != null || s.name == 'custom') {
+      return M3EButtonSize.custom(
+        height: s.height ?? base.height,
+        hPadding: s.hPadding ?? base.hPadding,
+        iconSize: s.iconSize ?? base.iconSize,
+        iconGap: s.iconGap ?? base.iconGap,
+        width: actionWidth ?? s.width ?? base.width,
+      );
     }
-  }
-
-  double _computeTarget(int? pressedIndex) {
-    final bool isPressed = pressedIndex == widget.index;
-    final bool isNeighbor =
-        pressedIndex != null &&
-        widget.index != pressedIndex &&
-        (widget.index == pressedIndex - 1 || widget.index == pressedIndex + 1);
-
-    if (isPressed) return widget.naturalSize + widget.expandBy;
-    if (isNeighbor) return widget.naturalSize - widget.expandBy / 2;
-    return widget.naturalSize;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<int?>(
-      valueListenable: widget.pressedIndexNotifier,
-      builder: (context, pressedIndex, _) {
-        final target = _computeTarget(pressedIndex);
-
-        return SingleMotionBuilder(
-          motion: _springMotion,
-          value: target,
-          builder: (_, animatedWidth, _) {
-            final delta = target - widget.naturalSize;
-            if (delta.abs() > ButtonConstants.kAnimationDeltaThreshold) {
-              final progress =
-                  ((animatedWidth - widget.naturalSize) / delta.abs()).clamp(
-                    0.0,
-                    1.0,
-                  );
-              widget.onProgressUpdate(progress);
-            }
-
-            // Clamp to [1, maxWidth]: lower bound prevents collapse, upper bound
-            // prevents RenderFlex overflow from spring overshoot.
-            final safeWidth =
-                (animatedWidth.isFinite && animatedWidth > 0
-                        ? animatedWidth
-                        : widget.naturalSize)
-                    .clamp(1.0, widget.maxWidth);
-
-            return SizedBox(width: safeWidth, child: widget.child);
-          },
-        );
-      },
-    );
-  }
-}
-
-class _SpringMenuWrapper extends StatefulWidget {
-  final Widget child;
-  final M3EMotion motion;
-  final Alignment alignment;
-  final bool isBottomSheet;
-
-  const _SpringMenuWrapper({
-    required this.child,
-    required this.motion,
-    required this.alignment,
-    this.isBottomSheet = false,
-  });
-
-  @override
-  State<_SpringMenuWrapper> createState() => _SpringMenuWrapperState();
-}
-
-class _SpringMenuWrapperState extends State<_SpringMenuWrapper>
-    with SingleTickerProviderStateMixin {
-  late SingleMotionController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = SingleMotionController(
-      motion: widget.motion.toMotion(),
-      vsync: this,
-    );
-    _ctrl.animateTo(1.0);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (context, child) {
-        final val = _ctrl.value;
-        if (widget.isBottomSheet) {
-          return Transform.translate(
-            offset: Offset(0, 40 * (1.0 - val.clamp(0.0, 1.5))),
-            child: child,
-          );
-        } else {
-          return Opacity(
-            opacity: val.clamp(0.0, 1.0),
-            child: Transform.scale(
-              scaleY: val.clamp(0.0, 1.2),
-              alignment: widget.alignment,
-              child: child,
-            ),
-          );
-        }
-      },
-      child: widget.child,
-    );
-  }
-}
-
-class _MoveFocusAction extends Action<_MoveFocusIntent> {
-  _MoveFocusAction(this._onMove);
-
-  final void Function(int direction) _onMove;
-
-  @override
-  Object? invoke(_MoveFocusIntent intent) {
-    _onMove(intent.direction);
-    return null;
+    return base;
   }
 }

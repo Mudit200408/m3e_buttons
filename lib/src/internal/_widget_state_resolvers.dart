@@ -1,6 +1,7 @@
-// Copyright 2024 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2026 Mudit Purohit
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 import 'package:flutter/material.dart';
 
@@ -10,7 +11,19 @@ abstract class WidgetStateResolver<T> {
   WidgetStateProperty<T> resolve(Set<WidgetState> states);
 }
 
-class ColorResolver extends WidgetStateResolver<Color?> {
+abstract class _CachedWidgetStateResolver<T> extends WidgetStateResolver<T> {
+  WidgetStateProperty<T>? _cached;
+
+  WidgetStateProperty<T> buildProperty();
+
+  @override
+  WidgetStateProperty<T> resolve(Set<WidgetState> states) {
+    _cached ??= buildProperty();
+    return _cached!;
+  }
+}
+
+class ColorResolver extends _CachedWidgetStateResolver<Color?> {
   final Color _color;
   final bool _applyDisabledAlpha;
 
@@ -18,11 +31,9 @@ class ColorResolver extends WidgetStateResolver<Color?> {
     : _color = color,
       _applyDisabledAlpha = applyDisabledAlpha;
 
-  WidgetStateProperty<Color?>? _cached;
-
   @override
-  WidgetStateProperty<Color?> resolve(Set<WidgetState> states) {
-    _cached ??= WidgetStateProperty.resolveWith((resolvedStates) {
+  WidgetStateProperty<Color?> buildProperty() {
+    return WidgetStateProperty.resolveWith((resolvedStates) {
       final disabled = resolvedStates.contains(WidgetState.disabled);
       if (disabled && _applyDisabledAlpha) {
         return _color.withValues(
@@ -31,11 +42,10 @@ class ColorResolver extends WidgetStateResolver<Color?> {
       }
       return _color;
     });
-    return _cached!;
   }
 }
 
-class BackgroundColorResolver extends WidgetStateResolver<Color?> {
+class BackgroundColorResolver extends _CachedWidgetStateResolver<Color?> {
   final Color? _decorationColor;
   final Color _fallbackColor;
   final bool _transparentForOutlined;
@@ -51,11 +61,9 @@ class BackgroundColorResolver extends WidgetStateResolver<Color?> {
        _transparentForOutlined = transparentForOutlined,
        _applyDisabledAlpha = applyDisabledAlpha;
 
-  WidgetStateProperty<Color?>? _cached;
-
   @override
-  WidgetStateProperty<Color?> resolve(Set<WidgetState> states) {
-    _cached ??= WidgetStateProperty.resolveWith((resolvedStates) {
+  WidgetStateProperty<Color?> buildProperty() {
+    return WidgetStateProperty.resolveWith((resolvedStates) {
       final disabled = resolvedStates.contains(WidgetState.disabled);
       final Color color;
 
@@ -74,25 +82,21 @@ class BackgroundColorResolver extends WidgetStateResolver<Color?> {
       }
       return color;
     });
-    return _cached!;
   }
 }
 
-class StaticColorResolver extends WidgetStateResolver<Color?> {
+class StaticColorResolver extends _CachedWidgetStateResolver<Color?> {
   final Color _color;
 
   StaticColorResolver(this._color);
 
-  WidgetStateProperty<Color?>? _cached;
-
   @override
-  WidgetStateProperty<Color?> resolve(Set<WidgetState> states) {
-    _cached ??= WidgetStateProperty.all(_color);
-    return _cached!;
+  WidgetStateProperty<Color?> buildProperty() {
+    return WidgetStateProperty.all(_color);
   }
 }
 
-class DecorationColorResolver extends WidgetStateResolver<Color?> {
+class DecorationColorResolver extends _CachedWidgetStateResolver<Color?> {
   final Color? _decorationColor;
   final Color Function(Set<WidgetState> states) _fallbackResolver;
   final bool _transparentForOutlined;
@@ -108,11 +112,9 @@ class DecorationColorResolver extends WidgetStateResolver<Color?> {
        _transparentForOutlined = transparentForOutlined,
        _applyDisabledAlpha = applyDisabledAlpha;
 
-  WidgetStateProperty<Color?>? _cached;
-
   @override
-  WidgetStateProperty<Color?> resolve(Set<WidgetState> states) {
-    _cached ??= WidgetStateProperty.resolveWith((resolvedStates) {
+  WidgetStateProperty<Color?> buildProperty() {
+    return WidgetStateProperty.resolveWith((resolvedStates) {
       final disabled = resolvedStates.contains(WidgetState.disabled);
       final Color color;
 
@@ -136,25 +138,21 @@ class DecorationColorResolver extends WidgetStateResolver<Color?> {
       }
       return color;
     });
-    return _cached!;
   }
 }
 
-class DoubleResolver extends WidgetStateResolver<double> {
+class DoubleResolver extends _CachedWidgetStateResolver<double> {
   final double Function(Set<WidgetState> states) _resolver;
 
   DoubleResolver(this._resolver);
 
-  WidgetStateProperty<double>? _cached;
-
   @override
-  WidgetStateProperty<double> resolve(Set<WidgetState> states) {
-    _cached ??= WidgetStateProperty.resolveWith(_resolver);
-    return _cached!;
+  WidgetStateProperty<double> buildProperty() {
+    return WidgetStateProperty.resolveWith(_resolver);
   }
 }
 
-class BorderSideResolver extends WidgetStateResolver<BorderSide> {
+class BorderSideResolver extends _CachedWidgetStateResolver<BorderSide> {
   final BorderSide? _decorationBorderSide;
   final BorderSide Function(Set<WidgetState> states) _fallbackResolver;
 
@@ -164,18 +162,15 @@ class BorderSideResolver extends WidgetStateResolver<BorderSide> {
   }) : _decorationBorderSide = decorationBorderSide,
        _fallbackResolver = fallbackResolver;
 
-  WidgetStateProperty<BorderSide>? _cached;
-
   @override
-  WidgetStateProperty<BorderSide> resolve(Set<WidgetState> states) {
-    _cached ??= _decorationBorderSide != null
+  WidgetStateProperty<BorderSide> buildProperty() {
+    return _decorationBorderSide != null
         ? WidgetStateProperty.all(_decorationBorderSide)
         : WidgetStateProperty.resolveWith(_fallbackResolver);
-    return _cached!;
   }
 }
 
-class OutlineBorderSideResolver extends WidgetStateResolver<BorderSide> {
+class OutlineBorderSideResolver extends _CachedWidgetStateResolver<BorderSide> {
   final Color? _decorationForegroundColor;
   final Color _fallbackColor;
   final bool _applyDisabledAlpha;
@@ -188,11 +183,9 @@ class OutlineBorderSideResolver extends WidgetStateResolver<BorderSide> {
        _fallbackColor = fallbackColor,
        _applyDisabledAlpha = applyDisabledAlpha;
 
-  WidgetStateProperty<BorderSide>? _cached;
-
   @override
-  WidgetStateProperty<BorderSide> resolve(Set<WidgetState> states) {
-    _cached ??= WidgetStateProperty.resolveWith((resolvedStates) {
+  WidgetStateProperty<BorderSide> buildProperty() {
+    return WidgetStateProperty.resolveWith((resolvedStates) {
       final disabled = resolvedStates.contains(WidgetState.disabled);
       final color = _decorationForegroundColor ?? _fallbackColor;
       return BorderSide(
@@ -204,7 +197,6 @@ class OutlineBorderSideResolver extends WidgetStateResolver<BorderSide> {
         width: 1,
       );
     });
-    return _cached!;
   }
 }
 

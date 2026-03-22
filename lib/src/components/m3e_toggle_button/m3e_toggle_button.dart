@@ -1,9 +1,10 @@
-// Copyright 2024 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2026 Mudit Purohit
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:motor/motor.dart';
 
 import '../../internal/_tokens_adapter.dart';
 import '../../internal/_button_motion.dart';
@@ -17,8 +18,12 @@ import '../../internal/button_constants.dart';
 const Alignment _kAlignmentCenter = Alignment.center;
 const VisualDensity _kVisualDensityStandard = VisualDensity.standard;
 const Duration _kDurationZero = Duration.zero;
-const InteractiveInkFeatureFactory _kInkRippleSplashFactory =
+const InteractiveInkFeatureFactory _kDefaultSplashFactory =
     InkRipple.splashFactory;
+const bool _kDefaultEnableFeedback = true;
+const double _kLabelSlideDistance = 10.0;
+final SpringMotion _kPressedRadiusMotion = M3EMotion.expressiveEffectsFast
+    .toMotion();
 
 // ---------------------------------------------------------------------------
 // M3EToggleButton
@@ -27,18 +32,10 @@ const InteractiveInkFeatureFactory _kInkRippleSplashFactory =
 /// Material 3 Expressive Toggle Button.
 ///
 /// Morphs between round (unchecked) and square (checked) shapes.
-/// Supports icon-only, icon+label, and label-only content.
 ///
-/// ## Compose parity
-///
-/// In Compose, `EnlargeOnPressNode` animates a 0→1 progress value that the
-/// parent `ButtonGroupMeasurePolicy` uses to compute compressed/expanded widths
-/// at layout time — the button itself is completely unaware of compression.
-/// We follow the same contract: **this widget knows nothing about being
-/// squeezed**. All width changes are applied externally by `_AnimatedWidthToggle`
-/// (a `SizedBox` around this widget). The internal padding and content always
-/// use their natural values; `ClipRect` on the content Row handles the visual
-/// crop when the external `SizedBox` is narrower than natural.
+/// Supports icon-only, icon+label, and label-only content. When used inside
+/// [M3EToggleButtonGroup], group-level layout can animate available width while
+/// this widget keeps its own content and shape animation behavior consistent.
 class M3EToggleButton extends StatefulWidget {
   const M3EToggleButton({
     super.key,
@@ -61,9 +58,16 @@ class M3EToggleButton extends StatefulWidget {
     this.autofocus = false,
     this.onFocusChange,
     this.semanticLabel,
+    this.onLongPress,
+    this.onHover,
+    this.enableFeedback = _kDefaultEnableFeedback,
+    this.splashFactory,
   });
 
+  /// Icon displayed in the unchecked state.
   final Widget? icon;
+
+  /// Icon displayed in the checked state. Falls back to [icon] when null.
   final Widget? checkedIcon;
 
   /// Optional text label. When set, button is content-width (not square).
@@ -72,15 +76,38 @@ class M3EToggleButton extends StatefulWidget {
   /// Label shown when checked. Falls back to [label] when null.
   final Widget? checkedLabel;
 
+  /// Current checked state. Null for internal state management.
   final bool? checked;
+
+  /// Callback fired when the checked state changes.
   final ValueChanged<bool> onCheckedChange;
 
+  /// Visual style of the toggle button.
+  ///
+  /// See [M3EButtonStyle] for available styles (filled, outlined, tonal, etc.).
   final M3EButtonStyle style;
+
+  /// Size variant of the toggle button.
+  ///
+  /// See [M3EButtonSize] for available sizes (xs, sm, md, lg, xl).
   final M3EButtonSize size;
+
+  /// Whether the toggle button is enabled.
   final bool enabled;
 
+  /// Whether this button is part of a connected button group.
+  ///
+  /// When true, the button shares its inner corners with adjacent buttons.
   final bool isGroupConnected;
+
+  /// Whether this is the first button in a connected group.
+  ///
+  /// Controls the outer corner radius on the leading edge.
   final bool isFirstInGroup;
+
+  /// Whether this is the last button in a connected group.
+  ///
+  /// Controls the outer corner radius on the trailing edge.
   final bool isLastInGroup;
 
   /// Optional decoration that bundles styling properties together.
@@ -109,12 +136,43 @@ class M3EToggleButton extends StatefulWidget {
   double? get decorationPressedRadius => decoration?.pressedRadius;
   double? get decorationConnectedInnerRadius =>
       decoration?.connectedInnerRadius;
+  WidgetStateProperty<Color?>? get decorationOverlayColor =>
+      decoration?.overlayColor;
+  WidgetStateProperty<Color?>? get decorationSurfaceTintColor =>
+      decoration?.surfaceTintColor;
 
+  /// Optional controller for managing widget states externally.
+  ///
+  /// Allows programmatic control of pressed, hovered, focused states.
   final WidgetStatesController? statesController;
+
+  /// External focus node for keyboard navigation.
   final FocusNode? focusNode;
+
+  /// Whether this button should focus itself on mount.
   final bool autofocus;
+
+  /// Callback fired when focus state changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Accessibility label. Merged on top of the button's own semantics.
   final String? semanticLabel;
+
+  /// Callback invoked when the button is long-pressed.
+  final VoidCallback? onLongPress;
+
+  /// Callback invoked when the hover state changes.
+  final ValueChanged<bool>? onHover;
+
+  /// Whether to show a ripple/splash effect and haptic feedback on press.
+  ///
+  /// Defaults to true.
+  final bool enableFeedback;
+
+  /// The splash factory for the ink ripple effect.
+  ///
+  /// See [InteractiveInkFeatureFactory] for available options.
+  final InteractiveInkFeatureFactory? splashFactory;
 
   @override
   State<M3EToggleButton> createState() => _M3EToggleButtonState();
@@ -169,7 +227,8 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
   FocusNode? get externalFocusNode => widget.focusNode;
 
   @override
-  M3EMotion? get effectiveMotion => widget.decorationMotion;
+  M3EMotion? get effectiveMotion =>
+      widget.decorationMotion ?? M3EMotion.expressiveSpatialDefault;
 
   @override
   void initState() {
@@ -230,16 +289,7 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
   void _handleTap() {
     if (!widget.enabled) return;
     if (widget.decorationHaptic != M3EHapticFeedback.none) {
-      switch (widget.decorationHaptic) {
-        case M3EHapticFeedback.light:
-          HapticFeedback.lightImpact();
-        case M3EHapticFeedback.medium:
-          HapticFeedback.mediumImpact();
-        case M3EHapticFeedback.heavy:
-          HapticFeedback.heavyImpact();
-        case M3EHapticFeedback.none:
-          break;
-      }
+      ButtonConstants.triggerHapticFeedback(widget.decorationHaptic);
     }
     final newChecked = !_isChecked;
     if (widget.checked == null) setState(() => _localChecked = newChecked);
@@ -337,7 +387,9 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
 
         Widget core = RepaintBoundary(
           child: RadiusAndPaddingMotion(
-            motion: springMotion,
+            motion: (effectivelyEnabled && pressed)
+                ? _kPressedRadiusMotion
+                : springMotion,
             internalLeft: hPad,
             internalRight: hPad,
             internalTop: 0,
@@ -372,7 +424,6 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
     BorderRadius animatedRadius,
   ) {
     final checked = _isChecked;
-    final double minW = _hasLabel ? 0 : m.height;
 
     final buttonShape = WidgetStateProperty.all<OutlinedBorder>(
       RoundedRectangleBorder(borderRadius: animatedRadius),
@@ -381,7 +432,7 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
       internalPadding,
     );
 
-    final style = _buildButtonStyle(checked, minW, buttonShape, padding);
+    final style = _buildButtonStyle(checked, buttonShape, padding);
 
     final Widget content = _buildContent(m, checked);
 
@@ -393,6 +444,8 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
         button = FilledButton(
           style: style,
           onPressed: onPressed,
+          onLongPress: widget.enabled ? widget.onLongPress : null,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -403,6 +456,8 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
         button = FilledButton.tonal(
           style: style,
           onPressed: onPressed,
+          onLongPress: widget.enabled ? widget.onLongPress : null,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -413,6 +468,8 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
         button = ElevatedButton(
           style: style,
           onPressed: onPressed,
+          onLongPress: widget.enabled ? widget.onLongPress : null,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -423,6 +480,8 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
         button = OutlinedButton(
           style: style,
           onPressed: onPressed,
+          onLongPress: widget.enabled ? widget.onLongPress : null,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -433,6 +492,8 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
         button = TextButton(
           style: style,
           onPressed: onPressed,
+          onLongPress: widget.enabled ? widget.onLongPress : null,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -450,7 +511,6 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
 
   ButtonStyle _buildButtonStyle(
     bool checked,
-    double minW,
     WidgetStateProperty<OutlinedBorder> buttonShape,
     WidgetStateProperty<EdgeInsetsGeometry> padding,
   ) {
@@ -473,7 +533,7 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
       case M3EButtonStyle.elevated:
         bgColor = checked
             ? (widget.decorationCheckedBackgroundColor ?? cs.primary)
-            : (widget.decorationBackgroundColor ?? cs.surface);
+            : (widget.decorationBackgroundColor ?? cs.surfaceContainerLow);
         fgColor = checked
             ? (widget.decorationCheckedForegroundColor ?? cs.onPrimary)
             : (widget.decorationForegroundColor ?? cs.primary);
@@ -518,7 +578,7 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
     return ButtonStyle(
       alignment: _kAlignmentCenter,
       textStyle: WidgetStateProperty.all(labelStyle),
-      minimumSize: WidgetStateProperty.all(Size(minW, _measurements.height)),
+      minimumSize: WidgetStateProperty.all(Size(0, _measurements.height)),
       padding: padding,
       foregroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
@@ -566,7 +626,10 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
       ),
       animationDuration: _kDurationZero,
       visualDensity: _kVisualDensityStandard,
-      splashFactory: _kInkRippleSplashFactory,
+      splashFactory: widget.splashFactory ?? _kDefaultSplashFactory,
+      overlayColor: widget.decorationOverlayColor,
+      surfaceTintColor: widget.decorationSurfaceTintColor,
+      enableFeedback: widget.enableFeedback,
     );
   }
 
@@ -581,9 +644,22 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
   /// offstage measurer so measured widths match visible output.
   Widget _buildContent(M3EButtonMeasurements m, bool checked) {
     final Widget? effectiveIcon = _effectiveIcon;
-    final Widget? effectiveLabel = _effectiveLabel;
+    final Widget? uncheckedLabel = widget.label;
+    final Widget? checkedLabel = widget.checkedLabel ?? widget.label;
+    final bool animateIconToCheckedLabel =
+        widget.icon != null &&
+        widget.checkedLabel != null &&
+        widget.label == null &&
+        widget.checkedIcon == null;
+    final bool animateLabelToCheckedIcon =
+        widget.checkedIcon != null &&
+        widget.label != null &&
+        widget.icon == null &&
+        widget.checkedLabel == null;
 
-    if (effectiveIcon == null && effectiveLabel == null) {
+    if (effectiveIcon == null &&
+        uncheckedLabel == null &&
+        checkedLabel == null) {
       return const SizedBox.shrink();
     }
 
@@ -605,29 +681,54 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
       );
     }
 
-    Widget? labelWidget;
-    if (effectiveLabel != null) {
-      labelWidget = DefaultTextStyle.merge(
-        maxLines: 1,
-        softWrap: false,
-        child: effectiveLabel,
+    final bool hasUncheckedLabel = uncheckedLabel != null;
+    final bool hasCheckedLabel = checkedLabel != null;
+    final bool hasDistinctLabelStates =
+        animateIconToCheckedLabel || animateLabelToCheckedIcon;
+
+    final motion = _labelTransitionMotion();
+
+    Widget buildRow(double progress) {
+      final p = _boundedProgress(progress);
+      final activeLabelProgress = _lerp(
+        hasUncheckedLabel ? 1.0 : 0.0,
+        hasCheckedLabel ? 1.0 : 0.0,
+        p,
       );
+
+      Widget? labelWidget;
+      if (hasDistinctLabelStates) {
+        labelWidget = _buildAnimatedLabelSlot(
+          uncheckedLabel: uncheckedLabel,
+          checkedLabel: checkedLabel,
+          progress: p,
+        );
+      } else if (_effectiveLabel != null) {
+        labelWidget = _buildLabelText(_effectiveLabel!, checked: checked);
+      }
+
+      final Widget? gapWidget = (iconWidget != null && labelWidget != null)
+          ? SizedBox(width: m.iconGap.toDouble() * activeLabelProgress)
+          : null;
+
+      if (iconWidget != null && labelWidget != null) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [iconWidget, gapWidget!, labelWidget],
+        );
+      }
+
+      return iconWidget ?? labelWidget ?? const SizedBox.shrink();
     }
 
-    final Widget naturalRow;
-    if (iconWidget != null && labelWidget != null) {
-      naturalRow = Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          iconWidget,
-          SizedBox(width: m.iconGap.toDouble()),
-          labelWidget,
-        ],
-      );
-    } else {
-      naturalRow = iconWidget ?? labelWidget!;
-    }
+    final Widget naturalRow = hasDistinctLabelStates
+        ? SingleMotionBuilder(
+            motion: motion,
+            value: checked ? 1.0 : 0.0,
+            builder: (context, progress, _) => buildRow(progress),
+          )
+        : buildRow(checked ? 1.0 : 0.0);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -646,4 +747,101 @@ class _M3EToggleButtonState extends State<M3EToggleButton>
       },
     );
   }
+
+  Widget _buildLabelText(Widget child, {required bool checked}) {
+    return KeyedSubtree(
+      key: ValueKey('toggle-label-$checked-${child.hashCode}'),
+      child: DefaultTextStyle.merge(maxLines: 1, softWrap: false, child: child),
+    );
+  }
+
+  Widget _buildAnimatedLabelSlot({
+    required Widget? uncheckedLabel,
+    required Widget? checkedLabel,
+    required double progress,
+  }) {
+    final unchecked = uncheckedLabel != null
+        ? _buildLabelText(uncheckedLabel, checked: false)
+        : null;
+    final checked = checkedLabel != null
+        ? _buildLabelText(checkedLabel, checked: true)
+        : null;
+
+    final p = _boundedProgress(progress);
+    final hasBothLabels = unchecked != null && checked != null;
+    final shouldSlideOneSidedCheckedAppear =
+        widget.icon != null &&
+        widget.checkedLabel != null &&
+        widget.label == null &&
+        widget.checkedIcon == null;
+
+    // In one-sided transitions (label -> none or none -> label), sliding plus
+    // clipping can make text disappear too early. Keep slide only for
+    // two-sided swaps, except the explicit unchecked-empty -> checked-content
+    // case where we want text fade+slide in.
+    final outgoingSlide = hasBothLabels ? _kLabelSlideDistance * p : 0.0;
+    final incomingSlide =
+        (hasBothLabels ||
+            (shouldSlideOneSidedCheckedAppear &&
+                unchecked == null &&
+                checked != null))
+        ? _kLabelSlideDistance * (1.0 - p)
+        : 0.0;
+
+    final outgoingOpacity = hasBothLabels ? (1.0 - p) : _lingerOpacity(1.0 - p);
+    final incomingOpacity = hasBothLabels ? p : _lingerOpacity(p);
+
+    return ClipRect(
+      child: Stack(
+        alignment: Alignment.centerLeft,
+        children: [
+          if (unchecked != null)
+            Align(
+              widthFactor: 1.0 - p,
+              alignment: Alignment.centerLeft,
+              child: Opacity(
+                opacity: outgoingOpacity,
+                child: Transform.translate(
+                  offset: Offset(-outgoingSlide, 0),
+                  child: unchecked,
+                ),
+              ),
+            ),
+          if (checked != null)
+            Align(
+              widthFactor: p,
+              alignment: Alignment.centerLeft,
+              child: Opacity(
+                opacity: incomingOpacity,
+                child: Transform.translate(
+                  offset: Offset(incomingSlide, 0),
+                  child: checked,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  SpringMotion _labelTransitionMotion() {
+    final base = effectiveMotion ?? M3EMotion.expressiveSpatialDefault;
+
+    // Keep label transitions monotonic near the destination and a touch slower
+    // than structural motion so collapse remains visible and continuous.
+    final damping = base.damping < 1.05 ? 1.05 : base.damping;
+    final stiffness = base.stiffness * 0.5;
+    return M3EMotion.custom(stiffness, damping).toMotion();
+  }
+
+  double _boundedProgress(double t) => t.clamp(0.0, 1.0);
+
+  double _lingerOpacity(double t) {
+    final p = _boundedProgress(t);
+    // Keep text visible for most of the travel and fade near the end.
+    if (p >= 0.45) return 1.0;
+    return p / 0.45;
+  }
+
+  double _lerp(double a, double b, double t) => a + (b - a) * t;
 }

@@ -1,6 +1,7 @@
-// Copyright 2024 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2026 Mudit Purohit
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 import 'package:flutter/material.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
@@ -15,6 +16,26 @@ typedef OverflowMenuItemBuilder =
       M3EToggleButtonGroupAction action,
       bool isSelected,
     );
+
+List<Widget> _buildVisibleButtons({
+  required int count,
+  required bool isRtl,
+  required Widget Function(int index, bool isFirst, bool isLast) buildButton,
+}) {
+  final children = <Widget>[];
+  for (int i = 0; i < count; i++) {
+    final isFirst = isRtl ? (i == count - 1) : (i == 0);
+    final isLast = isRtl ? (i == 0) : (i == count - 1);
+    children.add(buildButton(i, isFirst, isLast));
+  }
+  return children;
+}
+
+Widget _axisFlex(List<Widget> children, Axis direction) {
+  return direction == Axis.horizontal
+      ? Row(mainAxisSize: MainAxisSize.min, children: children)
+      : Column(mainAxisSize: MainAxisSize.min, children: children);
+}
 
 /// Abstract base class for custom overflow implementations.
 ///
@@ -61,6 +82,14 @@ abstract class OverflowStrategy {
   /// Used for debugging and analytics. Should be a unique string
   /// that identifies the strategy implementation.
   String get id;
+
+  /// Returns the estimated main-axis extent of the trigger built by [buildOverflowTrigger].
+  ///
+  /// If this returns [null], the group will fall back to a standard icon-only measurement.
+  /// Provide this if your custom trigger is significantly wider than a standard
+  /// icon button (for example, if it includes a text label) to prevent the
+  /// group from overflowing and clipping the content.
+  double? get triggerExtent => null;
 
   /// Builds the main layout of visible buttons.
   ///
@@ -176,15 +205,11 @@ class NoOverflowStrategy extends OverflowStrategy {
     required bool isRtl,
     required Widget Function(int index, bool isFirst, bool isLast) buildButton,
   }) {
-    final count = actions.length;
-    final children = <Widget>[];
-
-    for (int i = 0; i < count; i++) {
-      final isFirst = isRtl ? (i == count - 1) : (i == 0);
-      final isLast = isRtl ? (i == 0) : (i == count - 1);
-      children.add(buildButton(i, isFirst, isLast));
-    }
-
+    final children = _buildVisibleButtons(
+      count: actions.length,
+      isRtl: isRtl,
+      buildButton: buildButton,
+    );
     return _axisFlex(children, direction);
   }
 
@@ -209,11 +234,6 @@ class NoOverflowStrategy extends OverflowStrategy {
     required int firstHiddenIndex,
     required int? selectedIndex,
   }) async => null;
-
-  Widget _axisFlex(List<Widget> children, Axis direction) =>
-      direction == Axis.horizontal
-      ? Row(mainAxisSize: MainAxisSize.min, children: children)
-      : Column(mainAxisSize: MainAxisSize.min, children: children);
 }
 
 /// Strategy that scrolls overflowing buttons.
@@ -237,14 +257,11 @@ class ScrollOverflowStrategy extends OverflowStrategy {
     required bool isRtl,
     required Widget Function(int index, bool isFirst, bool isLast) buildButton,
   }) {
-    final count = actions.length;
-    final children = <Widget>[];
-
-    for (int i = 0; i < count; i++) {
-      final isFirst = isRtl ? (i == count - 1) : (i == 0);
-      final isLast = isRtl ? (i == 0) : (i == count - 1);
-      children.add(buildButton(i, isFirst, isLast));
-    }
+    final children = _buildVisibleButtons(
+      count: actions.length,
+      isRtl: isRtl,
+      buildButton: buildButton,
+    );
 
     return SingleChildScrollView(
       scrollDirection: direction,
@@ -275,9 +292,4 @@ class ScrollOverflowStrategy extends OverflowStrategy {
     required int firstHiddenIndex,
     required int? selectedIndex,
   }) async => null;
-
-  Widget _axisFlex(List<Widget> children, Axis direction) =>
-      direction == Axis.horizontal
-      ? Row(mainAxisSize: MainAxisSize.min, children: children)
-      : Column(mainAxisSize: MainAxisSize.min, children: children);
 }

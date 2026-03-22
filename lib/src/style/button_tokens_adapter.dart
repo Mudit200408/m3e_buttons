@@ -238,7 +238,7 @@ class M3EButtonTokensAdapter {
       case M3EButtonStyle.tonal:
         return c.secondaryContainer;
       case M3EButtonStyle.elevated:
-        return c.surface;
+        return c.surfaceContainerLow;
       case M3EButtonStyle.outlined:
       case M3EButtonStyle.text:
         return Colors.transparent;
@@ -581,8 +581,9 @@ class M3EButtonTokensAdapter {
   /// Leading icon block width.
   double splitLeadingIconBlockWidth(M3EButtonSize size) {
     for (final variant in _splitLeadingIconBlockWidth.keys) {
-      if (variant.name == size.name)
+      if (variant.name == size.name) {
         return _splitLeadingIconBlockWidth[variant]!;
+      }
     }
     return 24.0;
   }
@@ -594,7 +595,9 @@ class M3EButtonTokensAdapter {
   /// Gap between icon and label.
   double splitGapIconToLabel(M3EButtonSize size) {
     for (final variant in _splitGapIconToLabel.keys) {
-      if (variant.name == size.name) return _splitGapIconToLabel[variant]!;
+      if (variant.name == size.name) {
+        return _splitGapIconToLabel[variant]!;
+      }
     }
     return 8.0;
   }

@@ -1,10 +1,10 @@
-// Copyright 2024 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2026 Mudit Purohit
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../internal/_button_motion.dart';
 import '../../internal/button_constants.dart';
@@ -17,8 +17,10 @@ import '../../style/m3e_motion.dart';
 const Alignment _kAlignmentCenter = Alignment.center;
 const VisualDensity _kVisualDensityStandard = VisualDensity.standard;
 const Duration _kDurationZero = Duration.zero;
-const InteractiveInkFeatureFactory _kInkRippleSplashFactory =
+const InteractiveInkFeatureFactory _kDefaultSplashFactory =
     InkRipple.splashFactory;
+const bool _kDefaultEnableFeedback = true;
+final _kPressedRadiusMotion = M3EMotion.expressiveEffectsFast.toMotion();
 
 /// Material 3 Expressive Button.
 ///
@@ -57,18 +59,45 @@ class M3EButton extends StatefulWidget {
     this.onFocusChange,
     this.semanticLabel,
     this.mouseCursor = SystemMouseCursors.click,
+    this.onLongPress,
+    this.onHover,
+    this.enableFeedback = _kDefaultEnableFeedback,
+    this.splashFactory,
   }) : assert(
          label != null || icon != null,
          'M3EButton must be provided with either a label or an icon (or both).',
        );
 
+  /// Callback invoked when the button is pressed. Null disables the button.
   final VoidCallback? onPressed;
+
+  /// Optional text label displayed on the button.
   final Widget? label;
+
+  /// Optional leading icon displayed before the label.
   final Widget? icon;
+
+  /// Visual style of the button.
+  ///
+  /// See [M3EButtonStyle] for available styles (filled, outlined, tonal, etc.).
   final M3EButtonStyle style;
+
+  /// Size variant of the button.
+  ///
+  /// See [M3EButtonSize] for available sizes (xs, sm, md, lg, xl).
   final M3EButtonSize size;
+
+  /// Corner radius strategy for the button.
+  ///
+  /// See [M3EButtonShape] for available shapes (round, square).
   final M3EButtonShape shape;
+
+  /// Whether the button is enabled. Defaults to true.
   final bool enabled;
+
+  /// Optional controller for managing widget states externally.
+  ///
+  /// Allows programmatic control of pressed, hovered, focused states.
   final WidgetStatesController? statesController;
 
   /// Optional decoration that bundles styling properties together.
@@ -92,6 +121,22 @@ class M3EButton extends StatefulWidget {
   /// Custom mouse cursor.
   final MouseCursor mouseCursor;
 
+  /// Callback invoked when the button is long-pressed.
+  final VoidCallback? onLongPress;
+
+  /// Callback invoked when the hover state changes.
+  final ValueChanged<bool>? onHover;
+
+  /// Whether to show a ripple/splash effect and haptic feedback on press.
+  ///
+  /// Defaults to true.
+  final bool enableFeedback;
+
+  /// The splash factory for the ink ripple effect.
+  ///
+  /// See [InteractiveInkFeatureFactory] for available options.
+  final InteractiveInkFeatureFactory? splashFactory;
+
   // ── Decoration property helpers ───────────────────────────────────────────
 
   Color? get decorationBackgroundColor => decoration?.backgroundColor;
@@ -103,6 +148,10 @@ class M3EButton extends StatefulWidget {
       decoration?.haptic ?? M3EHapticFeedback.none;
   MouseCursor? get decorationMouseCursor => decoration?.mouseCursor;
   double? get decorationPressedRadius => decoration?.pressedRadius;
+  WidgetStateProperty<Color?>? get decorationOverlayColor =>
+      decoration?.overlayColor;
+  WidgetStateProperty<Color?>? get decorationSurfaceTintColor =>
+      decoration?.surfaceTintColor;
 
   @override
   State<M3EButton> createState() => _M3EButtonState();
@@ -256,7 +305,14 @@ class _M3EButtonState extends State<M3EButton>
       ),
       animationDuration: _kDurationZero,
       visualDensity: _kVisualDensityStandard,
-      splashFactory: _kInkRippleSplashFactory,
+      splashFactory: widget.splashFactory ?? _kDefaultSplashFactory,
+      overlayColor: widget.decorationOverlayColor,
+      surfaceTintColor: widget.decorationSurfaceTintColor,
+      enableFeedback:
+          (widget.decoration?.haptic != null &&
+              widget.decoration!.haptic != M3EHapticFeedback.none)
+          ? false
+          : widget.enableFeedback,
     );
   }
 
@@ -301,7 +357,9 @@ class _M3EButtonState extends State<M3EButton>
 
         Widget core = RepaintBoundary(
           child: RadiusAndPaddingMotion(
-            motion: springMotion,
+            motion: (effectivelyEnabled && pressed)
+                ? _kPressedRadiusMotion
+                : springMotion,
             internalLeft: baseInternalPadding.left,
             internalRight: baseInternalPadding.right,
             internalTop: baseInternalPadding.top,
@@ -343,7 +401,11 @@ class _M3EButtonState extends State<M3EButton>
     EdgeInsets internalPadding,
     BorderRadius animatedRadius,
   ) {
-    final child = _buildContent(m);
+    Widget child = _buildContent(m);
+    if (widget.semanticLabel != null) {
+      child = ExcludeSemantics(child: child);
+    }
+
     final shape = WidgetStateProperty.all<OutlinedBorder>(
       RoundedRectangleBorder(borderRadius: animatedRadius),
     );
@@ -358,19 +420,15 @@ class _M3EButtonState extends State<M3EButton>
       onPressed = () {
         if (widget.decoration?.haptic != null &&
             widget.decoration!.haptic != M3EHapticFeedback.none) {
-          switch (widget.decoration!.haptic!) {
-            case M3EHapticFeedback.light:
-              HapticFeedback.lightImpact();
-            case M3EHapticFeedback.medium:
-              HapticFeedback.mediumImpact();
-            case M3EHapticFeedback.heavy:
-              HapticFeedback.heavyImpact();
-            case M3EHapticFeedback.none:
-              break;
-          }
+          ButtonConstants.triggerHapticFeedback(widget.decoration!.haptic!);
         }
         widget.onPressed?.call();
       };
+    }
+
+    VoidCallback? onLongPress;
+    if (widget.enabled && widget.onLongPress != null) {
+      onLongPress = widget.onLongPress;
     }
 
     Widget button;
@@ -379,6 +437,8 @@ class _M3EButtonState extends State<M3EButton>
         button = FilledButton(
           style: style,
           onPressed: onPressed,
+          onLongPress: onLongPress,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -389,6 +449,8 @@ class _M3EButtonState extends State<M3EButton>
         button = FilledButton.tonal(
           style: style,
           onPressed: onPressed,
+          onLongPress: onLongPress,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -399,6 +461,8 @@ class _M3EButtonState extends State<M3EButton>
         button = ElevatedButton(
           style: style,
           onPressed: onPressed,
+          onLongPress: onLongPress,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -409,6 +473,8 @@ class _M3EButtonState extends State<M3EButton>
         button = OutlinedButton(
           style: style,
           onPressed: onPressed,
+          onLongPress: onLongPress,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -419,6 +485,8 @@ class _M3EButtonState extends State<M3EButton>
         button = TextButton(
           style: style,
           onPressed: onPressed,
+          onLongPress: onLongPress,
+          onHover: widget.onHover,
           statesController: statesController,
           focusNode: effectiveFocusNode,
           autofocus: widget.autofocus,
@@ -450,6 +518,7 @@ class _M3EButtonState extends State<M3EButton>
     final text = DefaultTextStyle.merge(
       maxLines: 2,
       softWrap: false,
+      overflow: TextOverflow.ellipsis,
       child: widget.label!,
     );
 

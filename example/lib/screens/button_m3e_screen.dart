@@ -6,13 +6,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
+// ignore: implementation_imports
+import 'package:m3e_buttons/src/internal/_overflow_strategy.dart';
 
+import 'tabs/button_helpers.dart';
 import 'tabs/split_button_tab.dart';
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
 class ButtonM3EScreen extends StatelessWidget {
-  const ButtonM3EScreen({super.key});
+  const ButtonM3EScreen({super.key, this.themeMode, this.onThemeModeChanged});
+
+  final ThemeMode? themeMode;
+  final ValueChanged<ThemeMode>? onThemeModeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +30,23 @@ class ButtonM3EScreen extends StatelessWidget {
           backgroundColor: Theme.of(context).colorScheme.surface,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
+          actions: [
+            if (themeMode != null && onThemeModeChanged != null)
+              IconButton(
+                icon: Icon(
+                  Theme.of(context).brightness == Brightness.light
+                      ? Icons.dark_mode
+                      : Icons.light_mode,
+                ),
+                onPressed: () {
+                  final newMode = themeMode == ThemeMode.light
+                      ? ThemeMode.dark
+                      : ThemeMode.light;
+                  onThemeModeChanged!(newMode);
+                },
+              ),
+            const SizedBox(width: 8),
+          ],
           bottom: const TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
@@ -73,6 +96,10 @@ class _ButtonTab extends StatelessWidget {
             children: [
               M3EButton(
                 style: M3EButtonStyle.filled,
+                enableFeedback: true,
+                decoration: M3EButtonDecoration(
+                  haptic: M3EHapticFeedback.light,
+                ),
                 label: const Text('Filled'),
                 icon: const Icon(Icons.save_rounded),
                 onPressed: () {},
@@ -282,9 +309,227 @@ class _ButtonTab extends StatelessWidget {
             ],
           ),
 
+          // ── onLongPress ─────────────────────────────────────────────────────
+          _Header('onLongPress callback', tt),
+          _Sub('Triggered when button is long-pressed.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              M3EButton(
+                style: M3EButtonStyle.filled,
+                label: const Text('Long press me'),
+                icon: const Icon(Icons.touch_app_rounded),
+                onPressed: () {},
+                onLongPress: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Long pressed!'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
+              M3EButton(
+                style: M3EButtonStyle.tonal,
+                label: const Text('Long press for menu'),
+                icon: const Icon(Icons.more_horiz_rounded),
+                onPressed: () {},
+                onLongPress: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Opening context menu...'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+
+          // ── onHover ────────────────────────────────────────────────────────
+          _Header('onHover callback', tt),
+          _Sub('Triggered when hover state changes (desktop/web).', cs, tt),
+          const SizedBox(height: 12),
+          _HoverExample(),
+
+          // ── enableFeedback ──────────────────────────────────────────────────
+          _Header('enableFeedback: false', tt),
+          _Sub('Disables ripple and default haptic feedback on press.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              M3EButton(
+                style: M3EButtonStyle.tonal,
+                label: const Text('With feedback'),
+                decoration: M3EButtonDecoration(
+                  haptic: M3EHapticFeedback.light,
+                ),
+                onPressed: () {},
+              ),
+              M3EButton(
+                style: M3EButtonStyle.tonal,
+                label: const Text('No feedback'),
+                enableFeedback: false,
+                onPressed: () {},
+              ),
+            ],
+          ),
+
+          // ── splashFactory ──────────────────────────────────────────────────
+          _Header('splashFactory: NoSplash', tt),
+          _Sub('Removes the ink ripple effect entirely.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              M3EButton(
+                style: M3EButtonStyle.filled,
+                label: const Text('Default ripple'),
+                onPressed: () {},
+              ),
+              M3EButton(
+                style: M3EButtonStyle.filled,
+                label: const Text('No splash'),
+                splashFactory: NoSplash.splashFactory,
+                onPressed: () {},
+              ),
+            ],
+          ),
+
+          // ── overlayColor ───────────────────────────────────────────────────
+          _Header('overlayColor (via decoration)', tt),
+          _Sub('Custom highlight color for pressed/hovered states.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              M3EButton(
+                style: M3EButtonStyle.filled,
+                label: const Text('Custom overlay'),
+                decoration: M3EButtonDecoration(
+                  overlayColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.pressed)) {
+                      return Colors.white.withValues(alpha: 0.2);
+                    }
+                    if (states.contains(WidgetState.hovered)) {
+                      return Colors.white.withValues(alpha: 0.1);
+                    }
+                    return null;
+                  }),
+                ),
+                onPressed: () {},
+              ),
+              M3EButton(
+                style: M3EButtonStyle.outlined,
+                label: const Text('Custom overlay'),
+                decoration: M3EButtonDecoration(
+                  overlayColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.pressed)) {
+                      return cs.primary.withValues(alpha: 0.2);
+                    }
+                    if (states.contains(WidgetState.hovered)) {
+                      return cs.primary.withValues(alpha: 0.1);
+                    }
+                    return null;
+                  }),
+                ),
+                onPressed: () {},
+              ),
+            ],
+          ),
+
+          // ── surfaceTintColor ───────────────────────────────────────────────
+          _Header('surfaceTintColor (via decoration)', tt),
+          _Sub('Adds a tint layer on top of the button background.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              M3EButton(
+                style: M3EButtonStyle.filled,
+                label: const Text('No tint'),
+                onPressed: () {},
+              ),
+              M3EButton(
+                style: M3EButtonStyle.filled,
+                label: const Text('Blue tint'),
+                decoration: M3EButtonDecoration(
+                  surfaceTintColor: WidgetStateProperty.all(
+                    cs.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                onPressed: () {},
+              ),
+              M3EButton(
+                style: M3EButtonStyle.elevated,
+                label: const Text('Tertiary tint'),
+                decoration: M3EButtonDecoration(
+                  surfaceTintColor: WidgetStateProperty.all(
+                    cs.tertiary.withValues(alpha: 0.5),
+                  ),
+                ),
+                onPressed: () {},
+              ),
+            ],
+          ),
+
           const SizedBox(height: 48),
         ],
       ),
+    );
+  }
+}
+
+// ── Helper widget for onHover example ────────────────────────────────────────
+
+class _HoverExample extends StatefulWidget {
+  @override
+  State<_HoverExample> createState() => _HoverExampleState();
+}
+
+class _HoverExampleState extends State<_HoverExample> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        M3EButton(
+          style: M3EButtonStyle.tonal,
+          label: Text(_isHovered ? 'Hovering!' : 'Hover over me'),
+          icon: Icon(_isHovered ? Icons.check_circle : Icons.touch_app),
+          onPressed: () {},
+          onHover: (hovering) {
+            setState(() => _isHovered = hovering);
+          },
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? cs.primaryContainer
+                : cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            'Hover state: ${_isHovered ? "hovered" : "not hovered"}',
+            style: TextStyle(
+              color: _isHovered ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -664,9 +909,237 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
             ],
           ),
 
+          // ── onLongPress ─────────────────────────────────────────────────────
+          _Header('onLongPress callback', tt),
+          _Sub('Triggered when toggle button is long-pressed.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              M3EToggleButton(
+                icon: const Icon(Icons.edit_outlined),
+                checkedIcon: const Icon(Icons.edit),
+                decoration: M3EToggleButtonDecoration(
+                  haptic: M3EHapticFeedback.light,
+                ),
+                onCheckedChange: (_) {},
+                onLongPress: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Edit options...'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
+              M3EToggleButton(
+                icon: const Icon(Icons.copy_outlined),
+                checkedIcon: const Icon(Icons.check),
+                decoration: M3EToggleButtonDecoration(
+                  haptic: M3EHapticFeedback.light,
+                ),
+                onCheckedChange: (_) {},
+                onLongPress: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Copy options...'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+
+          // ── onHover ────────────────────────────────────────────────────────
+          _Header('onHover callback', tt),
+          _Sub('Triggered when hover state changes (desktop/web).', cs, tt),
+          const SizedBox(height: 12),
+          _ToggleHoverExample(),
+
+          // ── enableFeedback ──────────────────────────────────────────────────
+          _Header('enableFeedback: false', tt),
+          _Sub('Disables ripple and default haptic feedback on press.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              M3EToggleButton(
+                icon: const Icon(Icons.favorite_border),
+                checkedIcon: const Icon(Icons.favorite),
+                decoration: M3EToggleButtonDecoration(
+                  haptic: M3EHapticFeedback.light,
+                ),
+                onCheckedChange: (_) {},
+              ),
+              M3EToggleButton(
+                icon: const Icon(Icons.favorite_border),
+                checkedIcon: const Icon(Icons.favorite),
+                enableFeedback: false,
+                onCheckedChange: (_) {},
+              ),
+            ],
+          ),
+
+          // ── splashFactory ──────────────────────────────────────────────────
+          _Header('splashFactory: NoSplash', tt),
+          _Sub('Removes the ink ripple effect entirely.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              M3EToggleButton(
+                icon: const Icon(Icons.star_border_rounded),
+                checkedIcon: const Icon(Icons.star_rounded),
+                onCheckedChange: (_) {},
+              ),
+              M3EToggleButton(
+                icon: const Icon(Icons.star_border_rounded),
+                checkedIcon: const Icon(Icons.star_rounded),
+                splashFactory: NoSplash.splashFactory,
+                onCheckedChange: (_) {},
+              ),
+            ],
+          ),
+
+          // ── overlayColor ───────────────────────────────────────────────────
+          _Header('overlayColor (via decoration)', tt),
+          _Sub('Custom highlight color for pressed/hovered states.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              M3EToggleButton(
+                icon: const Icon(Icons.visibility_outlined),
+                checkedIcon: const Icon(Icons.visibility),
+                decoration: M3EToggleButtonDecoration(
+                  overlayColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.pressed)) {
+                      return cs.primary.withValues(alpha: 0.2);
+                    }
+                    if (states.contains(WidgetState.hovered)) {
+                      return cs.primary.withValues(alpha: 0.1);
+                    }
+                    return null;
+                  }),
+                ),
+                onCheckedChange: (_) {},
+              ),
+              M3EToggleButton(
+                style: M3EButtonStyle.filled,
+                icon: const Icon(Icons.visibility_outlined),
+                checkedIcon: const Icon(Icons.visibility),
+                decoration: M3EToggleButtonDecoration(
+                  overlayColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.pressed)) {
+                      return Colors.white.withValues(alpha: 0.2);
+                    }
+                    if (states.contains(WidgetState.hovered)) {
+                      return Colors.white.withValues(alpha: 0.1);
+                    }
+                    return null;
+                  }),
+                ),
+                onCheckedChange: (_) {},
+              ),
+            ],
+          ),
+
+          // ── surfaceTintColor ───────────────────────────────────────────────
+          _Header('surfaceTintColor (via decoration)', tt),
+          _Sub('Adds a tint layer on top of the button background.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              M3EToggleButton(
+                style: M3EButtonStyle.filled,
+                icon: const Icon(Icons.dark_mode_outlined),
+                checkedIcon: const Icon(Icons.dark_mode),
+                decoration: M3EToggleButtonDecoration(
+                  surfaceTintColor: WidgetStateProperty.all(
+                    cs.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                onCheckedChange: (_) {},
+              ),
+              M3EToggleButton(
+                style: M3EButtonStyle.elevated,
+                icon: const Icon(Icons.light_mode_outlined),
+                checkedIcon: const Icon(Icons.light_mode),
+                decoration: M3EToggleButtonDecoration(
+                  surfaceTintColor: WidgetStateProperty.all(
+                    cs.tertiary.withValues(alpha: 0.5),
+                  ),
+                ),
+                onCheckedChange: (_) {},
+              ),
+            ],
+          ),
+
           const SizedBox(height: 48),
         ],
       ),
+    );
+  }
+}
+
+// ── Helper widget for toggle button onHover example ───────────────────────────
+
+class _ToggleHoverExample extends StatefulWidget {
+  @override
+  State<_ToggleHoverExample> createState() => _ToggleHoverExampleState();
+}
+
+class _ToggleHoverExampleState extends State<_ToggleHoverExample> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        M3EToggleButton(
+          icon: const Icon(Icons.touch_app),
+          decoration: M3EToggleButtonDecoration(
+            haptic: M3EHapticFeedback.light,
+          ),
+          onCheckedChange: (_) {},
+          onHover: (hovering) {
+            setState(() => _isHovered = hovering);
+          },
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? cs.primaryContainer
+                : cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            _isHovered ? 'Hovering!' : 'Hover over the button',
+            style: TextStyle(
+              color: _isHovered ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -688,6 +1161,18 @@ class _ToggleButtonGroupTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Jetpack Compose ──────────────────────
+          _Header('Jetpack Compose Example', tt),
+          _Sub(
+            'Jetpack Compose Example of toggle button, Add Individual width for each button',
+            cs,
+            tt,
+          ),
+          const SizedBox(height: 12),
+          const _JetpackComposeExample(),
+
+          const SizedBox(height: 20),
+
           // ── Standard multi-select, squish on ─────────────────────────────
           _Header('Standard — neighborSquish: true (default)', tt),
           _Sub(
@@ -763,17 +1248,18 @@ class _ToggleButtonGroupTab extends StatelessWidget {
           const SizedBox(height: 20),
 
           // ── Overflow: menu ────────────────────────────────────────────────
-          _Header('Standard — Overflow menu (dropdown)', tt),
+          _Header('Standard — Overflow menu (popup)', tt),
           _Sub(
-            'Labeled toggle actions collapse into an overflow dropdown menu.',
+            'Labeled toggle actions collapse into an overflow popup menu.',
             cs,
             tt,
           ),
           const SizedBox(height: 12),
           const _OverflowToggleDemoGroup(
             initialSelectedIndex: 0,
+
             overflow: M3EButtonGroupOverflow.menu,
-            overflowMenuStyle: M3EButtonGroupOverflowMenuStyle.dropdown,
+            overflowMenuStyle: M3EButtonGroupOverflowMenuStyle.popup,
             style: M3EButtonStyle.filled,
             actions: [
               (Icons.format_bold_rounded, 'Bold'),
@@ -845,6 +1331,13 @@ class _ToggleButtonGroupTab extends StatelessWidget {
           const SizedBox(height: 12),
           const _CustomOverflowDemoGroup(),
 
+          const SizedBox(height: 20),
+
+          // -- Connected toggle buttons ─────────────────────────────────────────
+          _Header('Connected — Example', tt),
+          _Sub('Default Example for connected toggle button group.', cs, tt),
+          const SizedBox(height: 12),
+          const _TbgConnectedExample(),
           const SizedBox(height: 20),
 
           // ── Connected round, single-select ────────────────────────────────
@@ -929,7 +1422,7 @@ class _TbgMultiSelectGroupState extends State<_TbgMultiSelectGroup> {
       pressedRadius: 8,
       uncheckedRadius: 18,
     ),
-    expandBy: 12,
+    expandedRatio: 0.15,
     selectedIndex: _index,
     onSelectedIndexChanged: (i) => setState(() => _index = i),
     actions: [
@@ -1030,7 +1523,10 @@ class _TbgCheckedLabelGroupState extends State<_TbgCheckedLabelGroup> {
     style: M3EButtonStyle.filled,
     size: M3EButtonSize.sm,
     spacing: 8.0,
-    expandBy: 10,
+    expandedRatio: 0.15,
+    decoration: const M3EToggleButtonDecoration(
+      motion: M3EMotion.expressiveSpatialDefault,
+    ),
     selectedIndices: _selectedIndices,
     onSelectedIndicesChanged: (indices) =>
         setState(() => _selectedIndices = indices),
@@ -1155,6 +1651,41 @@ class _MediaToggleButtonState extends State<_MediaToggleButton> {
       pressedRadius: 4,
     ),
     onCheckedChange: (v) => setState(() => _checked = v),
+  );
+}
+
+class _JetpackComposeExample extends StatefulWidget {
+  const _JetpackComposeExample();
+  @override
+  State<_JetpackComposeExample> createState() => _JetpackComposeExampleState();
+}
+
+class _JetpackComposeExampleState extends State<_JetpackComposeExample> {
+  int? _index;
+  @override
+  Widget build(BuildContext context) => M3EToggleButtonGroup(
+    style: M3EButtonStyle.filled,
+    spacing: 6.0,
+    expandedRatio: 0.08,
+
+    size: M3EButtonSize.custom(height: 80),
+    decoration: M3EToggleButtonDecoration(
+      haptic: M3EHapticFeedback.light,
+
+      motion: M3EMotion.expressiveSpatialDefault,
+      checkedRadius: 12,
+      pressedRadius: 6,
+    ),
+    neighborSquish: true,
+    selectedIndex: _index,
+    onSelectedIndexChanged: (i) => setState(() => _index = i),
+    actions: [
+      M3EToggleButtonGroupAction(icon: const Icon(Icons.bluetooth)),
+
+      M3EToggleButtonGroupAction(icon: const Icon(Icons.alarm), width: 80),
+      M3EToggleButtonGroupAction(icon: const Icon(Icons.link), width: 60),
+      M3EToggleButtonGroupAction(icon: const Icon(Icons.wifi), width: 120),
+    ],
   );
 }
 
@@ -1306,6 +1837,46 @@ class _TbgConnectedSquareGroupState extends State<_TbgConnectedSquareGroup> {
   );
 }
 
+class _TbgConnectedExample extends StatefulWidget {
+  const _TbgConnectedExample();
+  @override
+  State<_TbgConnectedExample> createState() => _TbgConnectedExampleState();
+}
+
+class _TbgConnectedExampleState extends State<_TbgConnectedExample> {
+  int? _index;
+  @override
+  Widget build(BuildContext context) => M3EToggleButtonGroup(
+    type: M3EButtonGroupType.connected,
+    shape: M3EButtonShape.square,
+    style: M3EButtonStyle.filled,
+    size: M3EButtonSize.sm,
+    spacing: 8.0,
+    selectedIndex: _index,
+    decoration: M3EToggleButtonDecoration(
+      connectedInnerRadius: 10,
+      pressedRadius: 3,
+      motion: M3EMotion.custom(600, 0.7),
+    ),
+    onSelectedIndexChanged: (i) => setState(() => _index = i),
+    actions: [
+      M3EToggleButtonGroupAction(
+        icon: const Icon(Icons.looks_one_rounded),
+        label: const Text('Look 1'),
+      ),
+      M3EToggleButtonGroupAction(
+        icon: const Icon(Icons.looks_two_rounded),
+        label: const Text('Look 2'),
+      ),
+      M3EToggleButtonGroupAction(
+        icon: const Icon(Icons.looks_3_rounded),
+        label: const Text('Look 3'),
+      ),
+     
+    ],
+  );
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // Self-contained overflow demo widget
 // ════════════════════════════════════════════════════════════════════════════
@@ -1352,7 +1923,7 @@ class _OverflowToggleDemoGroupState extends State<_OverflowToggleDemoGroup> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    final overflowDropdownDecoration = M3EOverflowDropdownDecoration(
+    final overflowPopupDecoration = M3EOverflowPopupDecoration(
       trailing: Icon(Icons.check_circle_rounded, color: cs.primary, size: 20),
       motion: M3EMotion.custom(800, 0.7),
     );
@@ -1378,7 +1949,7 @@ class _OverflowToggleDemoGroupState extends State<_OverflowToggleDemoGroup> {
         size: M3EButtonSize.md,
         overflow: widget.overflow,
         overflowMenuStyle: widget.overflowMenuStyle!,
-        overflowDropdownDecoration: overflowDropdownDecoration,
+        overflowPopupDecoration: overflowPopupDecoration,
         overflowBottomSheetDecoration: overflowBottomSheetDecoration,
         selectedIndex: _selectedIndex,
         onSelectedIndexChanged: (i) => setState(() => _selectedIndex = i),
@@ -1396,56 +1967,9 @@ class _OverflowToggleDemoGroupState extends State<_OverflowToggleDemoGroup> {
 // Shared UI helpers
 // ════════════════════════════════════════════════════════════════════════════
 
-class _Header extends StatelessWidget {
-  const _Header(this.title, this.tt);
-  final String title;
-  final TextTheme tt;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 24, bottom: 8),
-    child: Text(
-      title,
-      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-    ),
-  );
-}
-
-class _Sub extends StatelessWidget {
-  const _Sub(this.text, this.cs, this.tt);
-  final String text;
-  final ColorScheme cs;
-  final TextTheme tt;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 4),
-    child: Text(
-      text,
-      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-    ),
-  );
-}
-
-class _Labelled extends StatelessWidget {
-  const _Labelled(this.label, this.child);
-  final String label;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        child,
-        const SizedBox(height: 4),
-        Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-      ],
-    );
-  }
-}
+typedef _Header = ButtonHeader;
+typedef _Sub = ButtonSub;
+typedef _Labelled = ButtonLabelled;
 
 // ════════════════════════════════════════════════════════════════════════════
 // Custom Overflow Strategy Demos
@@ -1505,6 +2029,9 @@ class _DialogOverflowStrategyDemo extends OverflowStrategy {
 
   @override
   String get id => 'dialog-demo';
+
+  @override
+  double? get triggerExtent => 84.0; // wider size to accommodate text label
 
   @override
   Widget buildLayout({

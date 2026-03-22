@@ -12,9 +12,46 @@ import '../../style/m3e_split_button_decoration.dart';
 import '../../style/m3e_motion.dart';
 
 const double _kSplitMinTapTarget = 48.0;
+const bool _kDefaultEnableFeedback = true;
 
-enum SplitButtonM3ETrailingAlignment { opticalCenter, geometricCenter }
+/// Controls how the trailing (dropdown) button aligns with the leading button.
+///
+/// Used by [SplitButtonM3E] to control visual alignment of split segments.
+enum SplitButtonM3ETrailingAlignment {
+  /// Align using optical center to compensate for the dropdown arrow icon.
+  ///
+  /// The trailing button appears visually centered with the leading button.
+  opticalCenter,
 
+  /// Align using geometric center regardless of content differences.
+  ///
+  /// Both segments are exactly the same width.
+  geometricCenter,
+}
+
+/// Material 3 Expressive Split Button.
+///
+/// A split button consists of a primary action button and a trailing dropdown
+/// button that reveals additional options. Supports popup menus, bottom sheets,
+/// or custom menus via [menuBuilder].
+///
+/// ## Basic usage
+/// ```dart
+/// SplitButtonM3E<int>(
+///   items: const [
+///     SplitButtonM3EItem(value: 1, child: Text('Option 1')),
+///     SplitButtonM3EItem(value: 2, child: Text('Option 2')),
+///   ],
+///   onSelected: (value) {},
+///   onPressed: () {},
+/// )
+/// ```
+///
+/// ## Menu styles
+/// Use [M3ESplitButtonDecoration.menuStyle] to choose between:
+/// - [SplitButtonMenuStyle.popup]: Spring-animated popup (default)
+/// - [SplitButtonMenuStyle.bottomSheet]: Modal bottom sheet
+/// - [SplitButtonMenuStyle.native]: System popup menu
 class SplitButtonM3E<T> extends StatefulWidget {
   const SplitButtonM3E({
     super.key,
@@ -39,35 +76,115 @@ class SplitButtonM3E<T> extends StatefulWidget {
     this.onFocusChange,
     this.selectedValue,
     this.onMultiSelected,
+    this.onLongPress,
+    this.onHover,
+    this.enableFeedback = _kDefaultEnableFeedback,
+    this.splashFactory,
   }) : assert(
          items != null || menuBuilder != null,
          'Provide either `items` or `menuBuilder`.',
+       ),
+       assert(
+         style != M3EButtonStyle.text,
+         'SplitButtonM3E does not support M3EButtonStyle.text.',
        );
 
+  /// Menu items displayed when the trailing button is pressed.
+  ///
+  /// Use [SplitButtonM3EItem] to create items with a value and display widget.
   final List<SplitButtonM3EItem<T>>? items;
+
+  /// Callback fired when an item is selected from the menu.
   final ValueChanged<T>? onSelected;
+
+  /// Callback fired when the leading button is pressed.
   final VoidCallback? onPressed;
+
+  /// Text label displayed on the leading button.
   final String? label;
+
+  /// Leading icon displayed on the leading button.
   final IconData? leadingIcon;
+
+  /// Size variant of the split button.
+  ///
+  /// See [M3EButtonSize] for available sizes.
   final M3EButtonSize size;
+
+  /// Corner radius strategy for the button.
+  ///
+  /// See [M3EButtonShape] for available shapes.
   final M3EButtonShape shape;
+
+  /// Visual style of the split button.
+  ///
+  /// Supported styles: [M3EButtonStyle.filled], [M3EButtonStyle.tonal],
+  /// [M3EButtonStyle.elevated], and [M3EButtonStyle.outlined].
   final M3EButtonStyle style;
+
+  /// How the trailing button aligns with the leading button.
+  ///
+  /// See [SplitButtonM3ETrailingAlignment] for alignment options.
   final SplitButtonM3ETrailingAlignment trailingAlignment;
+
+  /// Tooltip for the leading button.
   final String? leadingTooltip;
+
+  /// Tooltip for the trailing button.
   final String? trailingTooltip;
+
+  /// Whether the split button is enabled.
   final bool enabled;
+
+  /// Custom menu builder function.
+  ///
+  /// When provided, this takes precedence over [items]. Use to create
+  /// custom menu content with [PopupMenuEntry] widgets.
   final List<PopupMenuEntry<T>> Function(BuildContext)? menuBuilder;
+
+  /// Optional decoration that bundles styling properties together.
+  ///
+  /// When provided, decoration values take precedence over individual parameters.
   final M3ESplitButtonDecoration? decoration;
 
   /// Optional mouse cursor to show when hovering over the button.
   final MouseCursor? mouseCursor;
 
+  /// Optional controller for managing widget states externally.
+  ///
+  /// Allows programmatic control of pressed, hovered, focused states.
   final WidgetStatesController? statesController;
+
+  /// External focus node for keyboard navigation.
   final FocusNode? focusNode;
+
+  /// Whether this button should focus itself on mount.
   final bool autofocus;
+
+  /// Callback fired when focus state changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Currently selected value (for showing selection state in menu).
   final T? selectedValue;
+
+  /// Callback fired when multiple items are selected (for multi-select mode).
   final void Function(Set<T>)? onMultiSelected;
+
+  /// Callback invoked when the leading button is long-pressed.
+  final VoidCallback? onLongPress;
+
+  /// Callback invoked when the hover state changes.
+  final ValueChanged<bool>? onHover;
+
+  /// Whether to show a ripple/splash effect and haptic feedback on press.
+  ///
+  /// Defaults to true.
+  final bool enableFeedback;
+
+  /// The splash factory for the ink ripple effect.
+  ///
+  /// See [InteractiveInkFeatureFactory] for available options.
+  final InteractiveInkFeatureFactory? splashFactory;
 
   Color? get decorationBackgroundColor => decoration?.backgroundColor;
   Color? get decorationForegroundColor => decoration?.foregroundColor;
@@ -87,6 +204,10 @@ class SplitButtonM3E<T> extends StatefulWidget {
   BorderSide? get decorationBorderSide => decoration?.borderSide;
   M3EHapticFeedback get decorationHaptic =>
       decoration?.haptic ?? M3EHapticFeedback.none;
+  WidgetStateProperty<Color?>? get decorationOverlayColor =>
+      decoration?.overlayColor;
+  WidgetStateProperty<Color?>? get decorationSurfaceTintColor =>
+      decoration?.surfaceTintColor;
 
   @override
   State<SplitButtonM3E<T>> createState() => _SplitButtonM3EState<T>();
@@ -455,12 +576,16 @@ class _SplitButtonM3EState<T> extends State<SplitButtonM3E<T>>
                     _triggerHaptic();
                   }
                 : null,
+            onLongPress: widget.enabled ? widget.onLongPress : null,
+            onHover: widget.onHover,
             statesController: statesController,
             canRequestFocus: false,
             mouseCursor:
                 widget.decoration?.mouseCursor ??
                 widget.mouseCursor ??
                 SystemMouseCursors.click,
+            enableFeedback: widget.enableFeedback,
+            splashFactory: widget.splashFactory ?? InkRipple.splashFactory,
             child: SizedBox(
               height: height,
               child: Center(
@@ -595,6 +720,7 @@ class _SplitButtonM3EState<T> extends State<SplitButtonM3E<T>>
                     if (_isTrailingHovered != value) {
                       setState(() => _isTrailingHovered = value);
                     }
+                    widget.onHover?.call(value);
                   }
                 : null,
             onTapDown: widget.enabled
@@ -607,6 +733,8 @@ class _SplitButtonM3EState<T> extends State<SplitButtonM3E<T>>
                 ? () => setState(() => _trailingPressed = false)
                 : null,
             canRequestFocus: false,
+            enableFeedback: widget.enableFeedback,
+            splashFactory: widget.splashFactory ?? InkRipple.splashFactory,
             child: Padding(
               padding: EdgeInsets.only(
                 left: trailingLeftPad,
@@ -649,8 +777,7 @@ class _SplitButtonM3EState<T> extends State<SplitButtonM3E<T>>
         widget.decorationForegroundColor ?? _tokens.foreground(widget.style);
     Color bgColor =
         widget.decorationBackgroundColor ??
-        (widget.style == M3EButtonStyle.outlined ||
-                widget.style == M3EButtonStyle.text
+        (widget.style == M3EButtonStyle.outlined
             ? Colors.transparent
             : _tokens.container(widget.style));
 
@@ -671,9 +798,7 @@ class _SplitButtonM3EState<T> extends State<SplitButtonM3E<T>>
       if (widget.decoration?.disabledBackgroundColor != null) {
         bgColor = widget.decoration!.disabledBackgroundColor!;
       } else {
-        bgColor =
-            (widget.style == M3EButtonStyle.outlined ||
-                widget.style == M3EButtonStyle.text)
+        bgColor = (widget.style == M3EButtonStyle.outlined)
             ? Colors.transparent
             : cs.onSurface.withValues(
                 alpha: ButtonConstants.kDisabledBackgroundAlpha,
@@ -747,17 +872,7 @@ class _SplitButtonM3EState<T> extends State<SplitButtonM3E<T>>
   void _triggerHaptic() {
     final haptic = widget.decorationHaptic;
     if (haptic == M3EHapticFeedback.none) return;
-
-    switch (haptic) {
-      case M3EHapticFeedback.light:
-        HapticFeedback.lightImpact();
-      case M3EHapticFeedback.medium:
-        HapticFeedback.mediumImpact();
-      case M3EHapticFeedback.heavy:
-        HapticFeedback.heavyImpact();
-      case M3EHapticFeedback.none:
-        break;
-    }
+    ButtonConstants.triggerHapticFeedback(haptic);
   }
 
   Future<void> _openMenu(BuildContext context) async {
@@ -893,7 +1008,9 @@ class _SplitButtonM3EState<T> extends State<SplitButtonM3E<T>>
       menuItems = items.map((e) {
         final Color effective = e.enabled
             ? onCont
-            : onCont.withValues(alpha: 0.38);
+            : onCont.withValues(
+                alpha: ButtonConstants.kDisabledForegroundAlpha,
+              );
         final Widget baseChild = e.child is Widget
             ? e.child as Widget
             : Text('${e.child}');
@@ -966,15 +1083,24 @@ class _SplitButtonM3EState<T> extends State<SplitButtonM3E<T>>
   }
 }
 
+/// A selectable option used by [SplitButtonM3E] menus.
 class SplitButtonM3EItem<T> {
+  /// Creates a menu item model for [SplitButtonM3E].
   const SplitButtonM3EItem({
     required this.value,
     required this.child,
     this.enabled = true,
   });
 
+  /// Value returned through [SplitButtonM3E.onSelected] when this item is chosen.
   final T value;
+
+  /// Content shown in the menu item.
+  ///
+  /// Supports [Widget], [IconData], or any value with a meaningful `toString`.
   final Object child;
+
+  /// Whether this item is interactive in the menu.
   final bool enabled;
 }
 

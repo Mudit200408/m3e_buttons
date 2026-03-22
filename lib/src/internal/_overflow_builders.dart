@@ -1,6 +1,7 @@
-// Copyright 2024 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2026 Mudit Purohit
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
@@ -8,11 +9,11 @@ import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:motor/motor.dart';
 import 'button_constants.dart';
 
-Future<int?> showOverflowDropdown({
+Future<int?> showOverflowPopup({
   required BuildContext context,
   required List<M3EToggleButtonGroupAction> actions,
   required int firstHiddenIndex,
-  required M3EOverflowDropdownDecoration decoration,
+  required M3EOverflowPopupDecoration decoration,
   required M3EToggleButtonDecoration? groupDecoration,
   required double menuRadius,
 }) {
@@ -109,7 +110,7 @@ Future<int?> showOverflowDropdown({
                     shrinkWrap: true,
                     children: [
                       for (int i = firstHiddenIndex; i < actions.length; i++)
-                        _buildDropdownEntry(
+                        _buildPopupEntry(
                           context: dialogContext,
                           action: actions[i],
                           groupDecoration: groupDecoration,
@@ -171,7 +172,7 @@ class _SpringScaleTransition extends StatelessWidget {
   }
 }
 
-Widget _buildDropdownEntry({
+Widget _buildPopupEntry({
   required BuildContext context,
   required M3EToggleButtonGroupAction action,
   required M3EToggleButtonDecoration? groupDecoration,

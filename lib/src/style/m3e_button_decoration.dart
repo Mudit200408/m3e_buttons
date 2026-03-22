@@ -68,6 +68,16 @@ class M3EButtonDecoration {
   /// Custom mouse cursor.
   final MouseCursor? mouseCursor;
 
+  /// The color of the overlay that appears behind the button.
+  ///
+  /// This is used to show pressed/hovered states.
+  final WidgetStateProperty<Color?>? overlayColor;
+
+  /// The color of the surface tint overlay.
+  ///
+  /// Only applies to filled and tonal button styles.
+  final WidgetStateProperty<Color?>? surfaceTintColor;
+
   const M3EButtonDecoration({
     this.backgroundColor,
     this.foregroundColor,
@@ -81,6 +91,8 @@ class M3EButtonDecoration {
     this.pressedRadius,
     this.mouseCursor,
     this.size,
+    this.overlayColor,
+    this.surfaceTintColor,
   });
 
   /// Creates a copy of this decoration with the given fields replaced.
@@ -99,6 +111,8 @@ class M3EButtonDecoration {
     double? pressedRadius,
     MouseCursor? mouseCursor,
     M3EButtonSize? size,
+    WidgetStateProperty<Color?>? overlayColor,
+    WidgetStateProperty<Color?>? surfaceTintColor,
   }) {
     return M3EButtonDecoration(
       backgroundColor: backgroundColor ?? this.backgroundColor,
@@ -115,6 +129,8 @@ class M3EButtonDecoration {
       pressedRadius: pressedRadius ?? this.pressedRadius,
       mouseCursor: mouseCursor ?? this.mouseCursor,
       size: size ?? this.size,
+      overlayColor: overlayColor ?? this.overlayColor,
+      surfaceTintColor: surfaceTintColor ?? this.surfaceTintColor,
     );
   }
 
@@ -133,7 +149,9 @@ class M3EButtonDecoration {
           hoveredRadius == other.hoveredRadius &&
           pressedRadius == other.pressedRadius &&
           mouseCursor == other.mouseCursor &&
-          size == other.size;
+          size == other.size &&
+          overlayColor == other.overlayColor &&
+          surfaceTintColor == other.surfaceTintColor;
 
   @override
   int get hashCode => Object.hash(
@@ -149,6 +167,8 @@ class M3EButtonDecoration {
     pressedRadius,
     mouseCursor,
     size,
+    overlayColor,
+    surfaceTintColor,
   );
 }
 
@@ -232,6 +252,16 @@ class M3EToggleButtonDecoration {
   /// Custom mouse cursor.
   final MouseCursor? mouseCursor;
 
+  /// The color of the overlay that appears behind the button.
+  ///
+  /// This is used to show pressed/hovered states.
+  final WidgetStateProperty<Color?>? overlayColor;
+
+  /// The color of the surface tint overlay.
+  ///
+  /// Only applies to filled and tonal button styles.
+  final WidgetStateProperty<Color?>? surfaceTintColor;
+
   const M3EToggleButtonDecoration({
     this.backgroundColor,
     this.foregroundColor,
@@ -250,6 +280,8 @@ class M3EToggleButtonDecoration {
     this.connectedHoveredInnerRadius,
     this.mouseCursor,
     this.size,
+    this.overlayColor,
+    this.surfaceTintColor,
   });
 
   /// Creates a copy of this decoration with the given fields replaced.
@@ -273,6 +305,8 @@ class M3EToggleButtonDecoration {
     double? connectedHoveredInnerRadius,
     MouseCursor? mouseCursor,
     M3EButtonSize? size,
+    WidgetStateProperty<Color?>? overlayColor,
+    WidgetStateProperty<Color?>? surfaceTintColor,
   }) {
     return M3EToggleButtonDecoration(
       backgroundColor: backgroundColor ?? this.backgroundColor,
@@ -297,6 +331,8 @@ class M3EToggleButtonDecoration {
           connectedHoveredInnerRadius ?? this.connectedHoveredInnerRadius,
       mouseCursor: mouseCursor ?? this.mouseCursor,
       size: size ?? this.size,
+      overlayColor: overlayColor ?? this.overlayColor,
+      surfaceTintColor: surfaceTintColor ?? this.surfaceTintColor,
     );
   }
 
@@ -320,7 +356,9 @@ class M3EToggleButtonDecoration {
           connectedInnerRadius == other.connectedInnerRadius &&
           connectedHoveredInnerRadius == other.connectedHoveredInnerRadius &&
           mouseCursor == other.mouseCursor &&
-          size == other.size;
+          size == other.size &&
+          overlayColor == other.overlayColor &&
+          surfaceTintColor == other.surfaceTintColor;
 
   @override
   int get hashCode => Object.hashAll([
@@ -341,5 +379,7 @@ class M3EToggleButtonDecoration {
     connectedHoveredInnerRadius,
     mouseCursor,
     size,
+    overlayColor,
+    surfaceTintColor,
   ]);
 }

@@ -150,6 +150,9 @@ class _MultiSelectBottomSheetState<T>
     extends State<_MultiSelectBottomSheet<T>> {
   late Set<T> _selectedValues;
 
+  static const double _kMinCheckboxSize = 20.0;
+  static const double _kMaxCheckboxSize = 32.0;
+
   @override
   void initState() {
     super.initState();
@@ -282,9 +285,17 @@ class _MultiSelectBottomSheetState<T>
     }
 
     final activeColor = checkboxStyle?.activeColor ?? cs.primary;
-    final checkColor = checkboxStyle?.checkColor ?? cs.onPrimary;
-    final borderRadius =
-        checkboxStyle?.borderRadius ?? BorderRadius.circular(4);
+    final iconColor = checkboxStyle?.iconColor ?? cs.onPrimary;
+    final borderColor =
+        checkboxStyle?.nonActiveColor ??
+        checkboxStyle?.borderColor ??
+        effectiveColor.withValues(alpha: 0.6);
+    final activeBorderRadius =
+        checkboxStyle?.activeBorderRadius ?? BorderRadius.circular(4);
+    final nonActiveBorderRadius =
+        checkboxStyle?.nonActiveBorderRadius ?? BorderRadius.circular(4);
+    final checkboxSize = _resolveCheckboxSize(item, child, context);
+    final selectedIcon = checkboxStyle?.icon ?? const Icon(Icons.check_rounded);
 
     return InkWell(
       autofocus: autofocus,
@@ -293,28 +304,101 @@ class _MultiSelectBottomSheetState<T>
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         child: Row(
           children: [
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: Checkbox(
-                value: isSelected,
-                onChanged: item.enabled
-                    ? (_) => _toggleValue(item.value)
-                    : null,
-                activeColor: activeColor,
-                checkColor: checkColor,
-                shape: RoundedRectangleBorder(borderRadius: borderRadius),
-                side: BorderSide(
-                  color: effectiveColor.withValues(alpha: 0.6),
-                  width: 1.5,
-                ),
-              ),
+            _buildStyledCheckbox(
+              size: checkboxSize,
+              selected: isSelected,
+              enabled: item.enabled,
+              activeColor: activeColor,
+              iconColor: iconColor,
+              borderColor: borderColor,
+              activeBorderRadius: activeBorderRadius,
+              nonActiveBorderRadius: nonActiveBorderRadius,
+              selectedIcon: selectedIcon,
             ),
             const SizedBox(width: 16),
             Expanded(child: child),
           ],
         ),
       ),
+    );
+  }
+
+  double _resolveCheckboxSize(
+    SplitButtonM3EItem<T> item,
+    Widget child,
+    BuildContext context,
+  ) {
+    if (item.child is IconData) {
+      return (widget.iconSize + 6.0).clamp(
+        _kMinCheckboxSize,
+        _kMaxCheckboxSize,
+      );
+    }
+    if (item.child is Icon) {
+      final icon = item.child as Icon;
+      final size = (icon.size ?? widget.iconSize) + 6.0;
+      return size.clamp(_kMinCheckboxSize, _kMaxCheckboxSize);
+    }
+    if (item.child is Text) {
+      final text = item.child as Text;
+      final fontSize =
+          text.style?.fontSize ??
+          Theme.of(context).textTheme.bodyLarge?.fontSize ??
+          16.0;
+      final size = fontSize * 1.35;
+      return size.clamp(_kMinCheckboxSize, _kMaxCheckboxSize);
+    }
+    if (child is PreferredSizeWidget) {
+      return child.preferredSize.height.clamp(
+        _kMinCheckboxSize,
+        _kMaxCheckboxSize,
+      );
+    }
+    return 24.0;
+  }
+
+  Widget _buildStyledCheckbox({
+    required double size,
+    required bool selected,
+    required bool enabled,
+    required Color activeColor,
+    required Color iconColor,
+    required Color borderColor,
+    required BorderRadius activeBorderRadius,
+    required BorderRadius nonActiveBorderRadius,
+    required Widget selectedIcon,
+  }) {
+    final bg = selected ? activeColor : Colors.transparent;
+    final radius = selected ? activeBorderRadius : nonActiveBorderRadius;
+    final outline = selected ? activeColor : borderColor;
+    final disabledAlpha = enabled
+        ? 1.0
+        : ButtonConstants.kDisabledForegroundAlpha;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOutCubic,
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: bg.withValues(alpha: bg.a * disabledAlpha),
+        borderRadius: radius,
+        border: Border.all(
+          color: outline.withValues(alpha: outline.a * disabledAlpha),
+          width: 1.5,
+        ),
+      ),
+      child: selected
+          ? Center(
+              child: IconTheme(
+                data: IconThemeData(
+                  color: iconColor.withValues(alpha: disabledAlpha),
+                  size: (size * 0.72).clamp(12.0, 22.0),
+                ),
+                child: selectedIcon,
+              ),
+            )
+          : null,
     );
   }
 }

@@ -17,7 +17,11 @@ class SplitButtonTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ButtonHeader('Styles', tt),
-          ButtonSub('All five emphasis styles from M3EButtonStyle.', cs, tt),
+          ButtonSub(
+            'Four supported emphasis styles (filled, tonal, elevated, outlined).',
+            cs,
+            tt,
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
@@ -68,17 +72,6 @@ class SplitButtonTab extends StatelessWidget {
                   SplitButtonM3EItem(value: 'option1', child: Text('Option 1')),
                   SplitButtonM3EItem(value: 'option2', child: Text('Option 2')),
                   SplitButtonM3EItem(value: 'option3', child: Text('Option 3')),
-                ],
-                onPressed: () {},
-                onSelected: (_) {},
-              ),
-              SplitButtonM3E<String>(
-                style: M3EButtonStyle.text,
-                label: 'Text',
-                leadingIcon: Icons.info_outline_rounded,
-                items: const [
-                  SplitButtonM3EItem(value: 'info', child: Text('Info')),
-                  SplitButtonM3EItem(value: 'help', child: Text('Help')),
                 ],
                 onPressed: () {},
                 onSelected: (_) {},
@@ -613,9 +606,303 @@ class SplitButtonTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _MultiSelectExample(),
+
+          ButtonHeader('onLongPress Callback', tt),
+          ButtonSub(
+            'Triggered when the leading button is long-pressed.',
+            cs,
+            tt,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.filled,
+                label: 'Long Press Me',
+                leadingIcon: Icons.touch_app_rounded,
+                items: const [
+                  SplitButtonM3EItem(value: 'option1', child: Text('Option 1')),
+                  SplitButtonM3EItem(value: 'option2', child: Text('Option 2')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+                onLongPress: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Long pressed!'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.tonal,
+                label: 'Context Menu',
+                leadingIcon: Icons.more_horiz_rounded,
+                items: const [
+                  SplitButtonM3EItem(value: 'edit', child: Text('Edit')),
+                  SplitButtonM3EItem(value: 'delete', child: Text('Delete')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+                onLongPress: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Opening context menu...'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+
+          ButtonHeader('onHover Callback', tt),
+          ButtonSub(
+            'Triggered when hover state changes (desktop/web).',
+            cs,
+            tt,
+          ),
+          const SizedBox(height: 12),
+          _SplitHoverExample(),
+
+          ButtonHeader('enableFeedback: false', tt),
+          ButtonSub(
+            'Disables ripple and default haptic feedback on press.',
+            cs,
+            tt,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.tonal,
+                label: 'With Feedback',
+                leadingIcon: Icons.vibration,
+                decoration: const M3ESplitButtonDecoration(
+                  haptic: M3EHapticFeedback.light,
+                ),
+                items: const [
+                  SplitButtonM3EItem(value: 'a', child: Text('Option A')),
+                  SplitButtonM3EItem(value: 'b', child: Text('Option B')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+              ),
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.tonal,
+                label: 'No Feedback',
+                leadingIcon: Icons.touch_app,
+                enableFeedback: false,
+                items: const [
+                  SplitButtonM3EItem(value: 'a', child: Text('Option A')),
+                  SplitButtonM3EItem(value: 'b', child: Text('Option B')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+              ),
+            ],
+          ),
+
+          ButtonHeader('splashFactory: NoSplash', tt),
+          ButtonSub('Removes the ink ripple effect entirely.', cs, tt),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.filled,
+                label: 'Default Ripple',
+                items: const [
+                  SplitButtonM3EItem(value: 'opt1', child: Text('Option 1')),
+                  SplitButtonM3EItem(value: 'opt2', child: Text('Option 2')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+              ),
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.filled,
+                label: 'No Splash',
+                splashFactory: NoSplash.splashFactory,
+                items: const [
+                  SplitButtonM3EItem(value: 'opt1', child: Text('Option 1')),
+                  SplitButtonM3EItem(value: 'opt2', child: Text('Option 2')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+              ),
+            ],
+          ),
+
+          ButtonHeader('overlayColor (via decoration)', tt),
+          ButtonSub(
+            'Custom highlight color for pressed/hovered states.',
+            cs,
+            tt,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.filled,
+                label: 'Custom Overlay',
+                leadingIcon: Icons.palette_rounded,
+                decoration: M3ESplitButtonDecoration(
+                  overlayColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.pressed)) {
+                      return Colors.white.withValues(alpha: 0.2);
+                    }
+                    if (states.contains(WidgetState.hovered)) {
+                      return Colors.white.withValues(alpha: 0.1);
+                    }
+                    return null;
+                  }),
+                ),
+                items: const [
+                  SplitButtonM3EItem(value: 'c1', child: Text('Custom 1')),
+                  SplitButtonM3EItem(value: 'c2', child: Text('Custom 2')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+              ),
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.outlined,
+                label: 'Outlined Overlay',
+                leadingIcon: Icons.brush_rounded,
+                decoration: M3ESplitButtonDecoration(
+                  overlayColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.pressed)) {
+                      return cs.primary.withValues(alpha: 0.2);
+                    }
+                    if (states.contains(WidgetState.hovered)) {
+                      return cs.primary.withValues(alpha: 0.1);
+                    }
+                    return null;
+                  }),
+                ),
+                items: const [
+                  SplitButtonM3EItem(value: 'b1', child: Text('Brush 1')),
+                  SplitButtonM3EItem(value: 'b2', child: Text('Brush 2')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+              ),
+            ],
+          ),
+
+          ButtonHeader('surfaceTintColor (via decoration)', tt),
+          ButtonSub(
+            'Adds a tint layer on top of the button background.',
+            cs,
+            tt,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.filled,
+                label: 'Blue Tint',
+                leadingIcon: Icons.water_drop_rounded,
+                decoration: M3ESplitButtonDecoration(
+                  surfaceTintColor: WidgetStateProperty.all(
+                    cs.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                items: const [
+                  SplitButtonM3EItem(value: 't1', child: Text('Tint 1')),
+                  SplitButtonM3EItem(value: 't2', child: Text('Tint 2')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+              ),
+              SplitButtonM3E<String>(
+                style: M3EButtonStyle.elevated,
+                label: 'Tertiary Tint',
+                leadingIcon: Icons.auto_awesome_rounded,
+                decoration: M3ESplitButtonDecoration(
+                  surfaceTintColor: WidgetStateProperty.all(
+                    cs.tertiary.withValues(alpha: 0.5),
+                  ),
+                ),
+                items: const [
+                  SplitButtonM3EItem(value: 'a1', child: Text('Awesome 1')),
+                  SplitButtonM3EItem(value: 'a2', child: Text('Awesome 2')),
+                ],
+                onPressed: () {},
+                onSelected: (_) {},
+              ),
+            ],
+          ),
+
           const SizedBox(height: 48),
         ],
       ),
+    );
+  }
+}
+
+// ── Helper widget for split button onHover example ──────────────────────────────
+
+class _SplitHoverExample extends StatefulWidget {
+  @override
+  State<_SplitHoverExample> createState() => _SplitHoverExampleState();
+}
+
+class _SplitHoverExampleState extends State<_SplitHoverExample> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        SplitButtonM3E<String>(
+          style: M3EButtonStyle.tonal,
+          label: _isHovered ? 'Hovering!' : 'Hover over me',
+          leadingIcon: _isHovered ? Icons.check_circle : Icons.touch_app,
+          decoration: const M3ESplitButtonDecoration(
+            haptic: M3EHapticFeedback.light,
+          ),
+          items: const [
+            SplitButtonM3EItem(value: 'h1', child: Text('Hover 1')),
+            SplitButtonM3EItem(value: 'h2', child: Text('Hover 2')),
+          ],
+          onPressed: () {},
+          onSelected: (_) {},
+          onHover: (hovering) {
+            setState(() => _isHovered = hovering);
+          },
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? cs.primaryContainer
+                : cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            'Hover state: ${_isHovered ? "hovered" : "not hovered"}',
+            style: TextStyle(
+              color: _isHovered ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -691,8 +978,10 @@ class _MultiSelectExampleState extends State<_MultiSelectExample> {
               selectionMode: SplitButtonSelectionMode.multiple,
               checkboxStyle: M3ESplitButtonCheckboxStyle(
                 activeColor: cs.primary,
-                checkColor: cs.onPrimary,
-                borderRadius: BorderRadius.circular(4),
+                nonActiveColor: cs.onSurfaceVariant,
+                iconColor: cs.onPrimary,
+                activeBorderRadius: BorderRadius.circular(99),
+                nonActiveBorderRadius: BorderRadius.circular(6),
               ),
             ),
           ),

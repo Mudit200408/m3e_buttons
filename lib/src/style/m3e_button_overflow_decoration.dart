@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'm3e_motion.dart';
 
-/// Styling configuration for the overflow dropdown menu in [M3EToggleButtonGroup].
+/// Styling configuration for the overflow popup menu in [M3EToggleButtonGroup].
 ///
-/// Use with [M3EToggleButtonGroup.overflowDropdownDecoration] to customize the
+/// Use with [M3EToggleButtonGroup.overflowPopupDecoration] to customize the
 /// appearance of the overflow menu when [M3EButtonGroupOverflow.menu] is used.
 ///
 /// ## Card List Style
@@ -16,7 +16,7 @@ import 'm3e_motion.dart';
 /// ```dart
 /// M3EToggleButtonGroup(
 ///   overflow: M3EButtonGroupOverflow.menu,
-///   overflowDropdownDecoration: M3EOverflowDropdownDecoration(
+///   overflowPopupDecoration: M3EOverflowPopupDecoration(
 ///     backgroundColor: Colors.surface,
 ///     elevation: 8,
 ///     useCardList: true,
@@ -31,47 +31,47 @@ import 'm3e_motion.dart';
 /// See also:
 /// - [M3EOverflowBottomSheetDecoration] for bottom sheet styling
 /// - [M3EToggleButtonGroup] for the overflow menu source
-class M3EOverflowDropdownDecoration {
-  /// Background color of the dropdown menu.
+class M3EOverflowPopupDecoration {
+  /// Background color of the popup menu.
   final Color? backgroundColor;
 
-  /// Elevation of the dropdown menu.
+  /// Elevation of the popup menu.
   final double elevation;
 
-  /// Border radius of the dropdown menu container.
+  /// Border radius of the popup menu container.
   final BorderRadius? borderRadius;
 
-  /// Border of the dropdown menu.
+  /// Border of the popup menu.
   final BorderSide? border;
 
-  /// Minimum width of the dropdown menu.
+  /// Minimum width of the popup menu.
   final double minWidth;
 
-  /// Maximum width of the dropdown menu.
+  /// Maximum width of the popup menu.
   final double maxWidth;
 
-  /// Maximum height of the dropdown menu.
+  /// Maximum height of the popup menu.
   final double maxHeight;
 
-  /// Padding of the dropdown menu list.
+  /// Padding of the popup menu list.
   final EdgeInsetsGeometry padding;
 
   /// Offset from the trigger button.
   final Offset offset;
 
-  /// Whether to use the M3E card list style for dropdown items.
+  /// Whether to use the M3E card list style for popup items.
   /// When true, items have rounded corners with outer/inner radius treatment.
   /// When false, uses standard ListTile style with selectedColor and selectedBorderRadius.
   /// Defaults to `true`.
   final bool useCardList;
 
-  /// Outer radius applied to the first and last dropdown item cards
+  /// Outer radius applied to the first and last popup item cards
   /// (the "cap" corners), mirroring the M3E card list treatment.
   /// Only used when [useCardList] is true.
   /// Defaults to `12.0`.
   final double outerRadius;
 
-  /// Inner radius applied to middle dropdown item cards.
+  /// Inner radius applied to middle popup item cards.
   /// Only used when [useCardList] is true.
   /// Defaults to `4.0`.
   final double innerRadius;
@@ -97,16 +97,16 @@ class M3EOverflowDropdownDecoration {
   /// Defaults to [Icons.check_rounded].
   final Widget? trailing;
 
-  /// Inner padding applied to each dropdown item.
+  /// Inner padding applied to each popup item.
   final EdgeInsetsGeometry itemPadding;
 
-  /// Spring animation configuration for the dropdown menu.
+  /// Spring animation configuration for the popup menu.
   ///
   /// Controls the spring physics for the menu open/close animation.
   /// Defaults to a snappy spring (stiffness: 1600, damping: 0.85).
   final M3EMotion motion;
 
-  const M3EOverflowDropdownDecoration({
+  const M3EOverflowPopupDecoration({
     this.backgroundColor,
     this.elevation = 10.0,
     this.borderRadius,
@@ -156,7 +156,7 @@ class M3EOverflowDropdownDecoration {
 /// ```
 ///
 /// See also:
-/// - [M3EOverflowDropdownDecoration] for dropdown menu styling
+/// - [M3EOverflowPopupDecoration] for popup menu styling
 /// - [M3EToggleButtonGroup] for the overflow menu source
 class M3EOverflowBottomSheetDecoration {
   /// Title shown at the top of the overflow sheet.
@@ -177,19 +177,19 @@ class M3EOverflowBottomSheetDecoration {
   /// Padding of the title.
   final EdgeInsetsGeometry titlePadding;
 
-  /// Whether to use the M3E card list style for dropdown items.
+  /// Whether to use the M3E card list style for popup items.
   /// When true, items have rounded corners with outer/inner radius treatment.
   /// When false, uses standard ListTile style with selectedColor and selectedBorderRadius.
   /// Defaults to `true`.
   final bool useCardList;
 
-  /// Outer radius applied to the first and last dropdown item cards
+  /// Outer radius applied to the first and last popup item cards
   /// (the "cap" corners), mirroring the M3E card list treatment.
   /// Only used when [useCardList] is true.
   /// Defaults to `12.0`.
   final double outerRadius;
 
-  /// Inner radius applied to middle dropdown item cards.
+  /// Inner radius applied to middle popup item cards.
   /// Only used when [useCardList] is true.
   /// Defaults to `4.0`.
   final double innerRadius;
@@ -215,7 +215,7 @@ class M3EOverflowBottomSheetDecoration {
   /// Defaults to [Icons.check_rounded].
   final Widget? trailing;
 
-  /// Inner padding applied to each dropdown item.
+  /// Inner padding applied to each popup item.
   final EdgeInsetsGeometry itemPadding;
 
   /// Spring animation configuration for the bottom sheet.

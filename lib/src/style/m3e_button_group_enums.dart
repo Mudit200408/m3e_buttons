@@ -1,6 +1,7 @@
-// Copyright 2024 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2026 Mudit Purohit
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 /// How buttons in the group are visually connected.
 ///
@@ -60,4 +61,4 @@ enum M3EButtonGroupOverflow {
 ///
 /// See also:
 /// - [M3EToggleButtonGroup] for the connected toggle button group
-enum M3EButtonGroupOverflowMenuStyle { dropdown, bottomSheet }
+enum M3EButtonGroupOverflowMenuStyle { popup, bottomSheet }

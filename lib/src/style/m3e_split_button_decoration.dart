@@ -4,10 +4,31 @@ import 'm3e_button_decoration.dart';
 import 'm3e_button_enums.dart';
 import 'm3e_motion.dart';
 
-enum SplitButtonMenuStyle { popup, bottomSheet, native }
+/// Menu presentation style used by [M3ESplitButtonDecoration.menuStyle].
+enum SplitButtonMenuStyle {
+  /// Spring-animated popup menu anchored to the trailing segment.
+  popup,
 
-enum SplitButtonSelectionMode { single, multiple }
+  /// Modal bottom sheet menu.
+  bottomSheet,
 
+  /// Native Flutter popup menu.
+  native,
+}
+
+/// Selection behavior for bottom-sheet split button menus.
+enum SplitButtonSelectionMode {
+  /// Single item can be selected at a time.
+  single,
+
+  /// Multiple items can be selected together.
+  multiple,
+}
+
+/// Styling options for split-button popup menus.
+///
+/// Used by [M3ESplitButtonDecoration.popupDecoration] when
+/// [SplitButtonMenuStyle.popup] is selected.
 @immutable
 class M3ESplitButtonPopupDecoration {
   const M3ESplitButtonPopupDecoration({
@@ -103,6 +124,10 @@ class M3ESplitButtonPopupDecoration {
 }
 
 @immutable
+/// Styling options for split-button bottom-sheet menus.
+///
+/// Used by [M3ESplitButtonDecoration.bottomSheetDecoration] when
+/// [SplitButtonMenuStyle.bottomSheet] is selected.
 class M3ESplitButtonBottomSheetDecoration {
   const M3ESplitButtonBottomSheetDecoration({
     this.title,
@@ -179,27 +204,67 @@ class M3ESplitButtonBottomSheetDecoration {
 }
 
 @immutable
+/// Checkbox styling used for multi-select split-button bottom sheets.
 class M3ESplitButtonCheckboxStyle {
   const M3ESplitButtonCheckboxStyle({
     this.activeColor,
-    this.checkColor,
-    this.borderRadius,
+    this.iconColor,
+    this.nonActiveColor,
+    this.borderColor,
+    this.activeBorderRadius,
+    this.nonActiveBorderRadius,
+    this.icon = const Icon(Icons.check_rounded),
   });
 
+  /// Fill color when the checkbox is selected.
   final Color? activeColor;
-  final Color? checkColor;
-  final BorderRadius? borderRadius;
+
+  /// Icon color used for the selected checkbox icon.
+  final Color? iconColor;
+
+  /// Border color when the checkbox is not selected.
+  ///
+  /// Preferred field name for unchecked-state border color.
+  final Color? nonActiveColor;
+
+  /// Border color when the checkbox is not selected.
+  ///
+  /// Legacy alias kept for compatibility.
+  final Color? borderColor;
+
+  /// Border radius used when the checkbox is selected.
+  final BorderRadius? activeBorderRadius;
+
+  /// Border radius used when the checkbox is not selected.
+  final BorderRadius? nonActiveBorderRadius;
+
+  /// Icon displayed when selected.
+  ///
+  /// Defaults to a check icon.
+  final Widget? icon;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is M3ESplitButtonCheckboxStyle &&
           activeColor == other.activeColor &&
-          checkColor == other.checkColor &&
-          borderRadius == other.borderRadius;
+          iconColor == other.iconColor &&
+          nonActiveColor == other.nonActiveColor &&
+          borderColor == other.borderColor &&
+          activeBorderRadius == other.activeBorderRadius &&
+          nonActiveBorderRadius == other.nonActiveBorderRadius &&
+          icon == other.icon;
 
   @override
-  int get hashCode => Object.hash(activeColor, checkColor, borderRadius);
+  int get hashCode => Object.hash(
+    activeColor,
+    iconColor,
+    nonActiveColor,
+    borderColor,
+    activeBorderRadius,
+    nonActiveBorderRadius,
+    icon,
+  );
 }
 
 /// Styling overrides for [M3ESplitButton].
@@ -312,6 +377,11 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
     super.borderRadius,
     super.haptic,
     super.mouseCursor,
+    super.hoveredRadius,
+    super.pressedRadius,
+    super.size,
+    super.overlayColor,
+    super.surfaceTintColor,
     this.trailingBackgroundColor,
     this.trailingForegroundColor,
     this.menuBackgroundColor,
@@ -324,9 +394,6 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
     this.menuStyle = SplitButtonMenuStyle.popup,
     this.popupDecoration,
     this.bottomSheetDecoration,
-    super.hoveredRadius,
-    super.pressedRadius,
-    super.size,
   });
 
   @override
@@ -340,6 +407,11 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
     M3EMotion? motion,
     M3EHapticFeedback? haptic,
     MouseCursor? mouseCursor,
+    double? hoveredRadius,
+    double? pressedRadius,
+    M3EButtonSize? size,
+    WidgetStateProperty<Color?>? overlayColor,
+    WidgetStateProperty<Color?>? surfaceTintColor,
     Color? trailingBackgroundColor,
     Color? trailingForegroundColor,
     Color? menuBackgroundColor,
@@ -352,9 +424,6 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
     SplitButtonMenuStyle? menuStyle,
     M3ESplitButtonPopupDecoration? popupDecoration,
     M3ESplitButtonBottomSheetDecoration? bottomSheetDecoration,
-    double? hoveredRadius,
-    double? pressedRadius,
-    M3EButtonSize? size,
   }) {
     return M3ESplitButtonDecoration(
       backgroundColor: backgroundColor ?? this.backgroundColor,
@@ -367,6 +436,11 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
       borderRadius: borderRadius ?? this.borderRadius,
       haptic: haptic ?? this.haptic,
       mouseCursor: mouseCursor ?? this.mouseCursor,
+      hoveredRadius: hoveredRadius ?? this.hoveredRadius,
+      pressedRadius: pressedRadius ?? this.pressedRadius,
+      size: size ?? this.size,
+      overlayColor: overlayColor ?? this.overlayColor,
+      surfaceTintColor: surfaceTintColor ?? this.surfaceTintColor,
       trailingBackgroundColor:
           trailingBackgroundColor ?? this.trailingBackgroundColor,
       trailingForegroundColor:
@@ -383,9 +457,6 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
       popupDecoration: popupDecoration ?? this.popupDecoration,
       bottomSheetDecoration:
           bottomSheetDecoration ?? this.bottomSheetDecoration,
-      hoveredRadius: hoveredRadius ?? this.hoveredRadius,
-      pressedRadius: pressedRadius ?? this.pressedRadius,
-      size: size ?? this.size,
     );
   }
 
@@ -401,6 +472,11 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
           borderRadius == other.borderRadius &&
           haptic == other.haptic &&
           mouseCursor == other.mouseCursor &&
+          hoveredRadius == other.hoveredRadius &&
+          pressedRadius == other.pressedRadius &&
+          size == other.size &&
+          overlayColor == other.overlayColor &&
+          surfaceTintColor == other.surfaceTintColor &&
           trailingBackgroundColor == other.trailingBackgroundColor &&
           trailingForegroundColor == other.trailingForegroundColor &&
           menuBackgroundColor == other.menuBackgroundColor &&
@@ -412,10 +488,7 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
           gap == other.gap &&
           menuStyle == other.menuStyle &&
           popupDecoration == other.popupDecoration &&
-          bottomSheetDecoration == other.bottomSheetDecoration &&
-          hoveredRadius == other.hoveredRadius &&
-          pressedRadius == other.pressedRadius &&
-          size == other.size;
+          bottomSheetDecoration == other.bottomSheetDecoration;
 
   @override
   int get hashCode => Object.hashAll([
@@ -428,6 +501,11 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
     borderRadius,
     haptic,
     mouseCursor,
+    hoveredRadius,
+    pressedRadius,
+    size,
+    overlayColor,
+    surfaceTintColor,
     trailingBackgroundColor,
     trailingForegroundColor,
     menuBackgroundColor,
@@ -440,8 +518,5 @@ class M3ESplitButtonDecoration extends M3EButtonDecoration {
     menuStyle,
     popupDecoration,
     bottomSheetDecoration,
-    hoveredRadius,
-    pressedRadius,
-    size,
   ]);
 }

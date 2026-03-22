@@ -1,6 +1,11 @@
-// Copyright 2024 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2026 Mudit Purohit
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
+
+import 'package:flutter/services.dart';
+
+import '../style/m3e_button_enums.dart';
 
 /// Shared numeric constants used throughout the button package.
 ///
@@ -77,4 +82,18 @@ abstract final class ButtonConstants {
   /// Minimum delta threshold for triggering animation progress update.
   /// Prevents floating-point noise from triggering micro-updates.
   static const double kAnimationDeltaThreshold = 0.5;
+
+  /// Triggers haptic feedback for the selected [M3EHapticFeedback] level.
+  static void triggerHapticFeedback(M3EHapticFeedback haptic) {
+    switch (haptic) {
+      case M3EHapticFeedback.light:
+        HapticFeedback.lightImpact();
+      case M3EHapticFeedback.medium:
+        HapticFeedback.mediumImpact();
+      case M3EHapticFeedback.heavy:
+        HapticFeedback.heavyImpact();
+      case M3EHapticFeedback.none:
+        break;
+    }
+  }
 }
