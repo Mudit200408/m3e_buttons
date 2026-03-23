@@ -5,9 +5,10 @@
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 [![Material 3 Expressive](https://img.shields.io/badge/Material%203-Expressive-purple?style=flat-square)](https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration)
 
-> **Buttons the way they were meant to feel.** Spring-physics. Shape morphing. Five styles, five sizes, zero compromises.
+<img src="doc/buttons.png" alt="M3EButton">
 
-![Jetpack Compose Inspiration](doc/jetpack-compose-example.gif)
+> **Buttons the way they were meant to feel.** Spring-physics. Shape morphing. Five styles, five sizes, zero compromises.
+<img src="doc/jetpack-compose-example.gif" alt="Jetpack Compose Inspiration">
 
 Inspired by the [Jetpack Compose](https://developer.android.com/jetpack/compose) implementation of **Material 3 Expressive** buttons, `m3e_buttons` brings the same spring-driven shape animations, rich customisation model, and tactile responsiveness to Flutter — without writing a single line of animation code yourself.
 
@@ -123,7 +124,7 @@ class Demo extends StatelessWidget {
 
 The standard single-action button. Five visual styles. Five sizes. Spring-animated radius squish on press, expansion on hover, and a focus ring that follows the animated shape.
 
-![M3EButton Example](doc/m3e-button-ex.gif)
+<img src="doc/m3e-button-ex.gif" width="400" alt="M3EButton Example">
 
 ```dart
 M3EButton(
@@ -165,7 +166,7 @@ M3EButton(
 
 A stateful toggle with expressive **shape morphing** between unchecked (round) and checked (square) states. Supports icon-only, icon + label, or label-only content, with smooth animated label transitions.
 
-![Toggle Button Example](doc/toggle-button-ex.gif)
+<img src="doc/toggle-button-ex.gif" width="400" alt="Toggle Button Example">
 
 ```dart
 M3EToggleButton(
@@ -214,8 +215,8 @@ M3EToggleButton(
 
 A horizontal (or vertical) row of `M3EToggleButton`s with **neighbor-squish** animation — when a button is pressed, it expands and its neighbors compress. Supports single-select and multi-select modes, connected group layout, and overflow handling.
 
-![Connected Group Example](doc/connected-button-example.gif)
-![Overflow Example](doc/togglebutton-overflow.gif)
+<img src="doc/connected-button-example.gif" width="400" alt="Connected Group Example">
+<img src="doc/togglebutton-overflow.gif" width="400" alt="Overflow Example">
 
 ```dart
 // Single-select connected group
@@ -302,8 +303,8 @@ Each action maps one-to-one to a button inside the group.
 
 A dual-segment button — a primary action on the left, a chevron-triggered dropdown on the right. The trailing segment morphs to a circle when the menu is open on `md`, `lg`, and `xl` sizes.
 
-![Split Button Example](doc/split-button-ex.gif)
-![Split Button Menu](doc/split-button-menu-ex.gif)
+<img src="doc/split-button-ex.gif" width="400" alt="Split Button Example">
+<img src="doc/split-button-menu-ex.gif" width="400" alt="Split Button Menu">
 
 ```dart
 SplitButtonM3E<String>(
@@ -730,21 +731,16 @@ flutter run
 ```
 
 ---
+## 🐞 Found a bug? or ✨ You have a Feature Request?
 
-## Changelog
+Feel free to open a [Issue](https://github.com/Mudit200408/m3e_buttons/issues) or [Contribute](https://github.com/Mudit200408/m3e_buttons/pulls) to the project.
 
-See [CHANGELOG.md](CHANGELOG.md).
-
----
-
-## License
-
-MIT License. See [LICENSE](LICENSE).
+Hope You Love It!
 
 ---
 
-> 💡 Want more Material 3 Expressive components? Check out the full ecosystem at  
-> **[pub.dev/packages/m3e_core](https://pub.dev/packages/m3e_core)**
+> 💡 Want more Material 3 Expressive components? Check out the ALL IN ONE Package  
+> **[M3E Core](https://pub.dev/packages/m3e_core)**
 
 ---
 

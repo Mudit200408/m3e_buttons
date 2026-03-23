@@ -9,8 +9,8 @@ topics:
   - ui
   - material-3-expressive
   - buttons
-  - button_groups
-  - split_buttons
+  - button-groups
+  - split-buttons
 
 environment:
   sdk: ^3.11.1
