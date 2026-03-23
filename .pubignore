@@ -1,0 +1,11 @@
+# Ignore docs and build artifacts for pub publish to reduce package size
+doc/
+build/
+example/build/
+example/android/
+example/ios/
+example/macos/
+example/linux/
+example/windows/
+example/web/
+example/test/

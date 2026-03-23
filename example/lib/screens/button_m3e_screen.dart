@@ -1872,7 +1872,6 @@ class _TbgConnectedExampleState extends State<_TbgConnectedExample> {
         icon: const Icon(Icons.looks_3_rounded),
         label: const Text('Look 3'),
       ),
-     
     ],
   );
 }
