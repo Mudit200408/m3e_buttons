@@ -18,7 +18,7 @@ Inspired by the [Jetpack Compose](https://developer.android.com/jetpack/compose)
 ---
 
 > [!WARNING]
-> **Breaking changes in v0.0.2** — If you are upgrading from v0.0.1, please read the [Migration Guide](#migration-from-v001-to-v002) before updating. Several parameters have been renamed, removed, or replaced with `WidgetStateProperty`-based equivalents. Component class names have also changed.
+> **Breaking changes in v0.0.3** — If you are upgrading from v0.0.1, please read the [Migration Guide](#migration-from-v001-to-v002) before updating. Several parameters have been renamed, removed, or replaced with `WidgetStateProperty`-based equivalents. Component class names have also changed.
 
 ---
 
@@ -28,7 +28,7 @@ Inspired by the [Jetpack Compose](https://developer.android.com/jetpack/compose)
 - [Screenshots](#screenshots)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Migration from v0.0.1 to v0.0.2](#migration-from-v001-to-v002)
+- [Migration from v0.0.1 to v0.0.3](#migration-from-v001-to-v002)
 - [Drop-in Flutter Replacement](#drop-in-flutter-replacement)
 - [Components](#components)
   - [M3EButton](#m3ebutton)
@@ -137,7 +137,7 @@ class Demo extends StatelessWidget {
 
 ---
 
-## Migration from v0.0.1 to v0.0.2
+## Migration from v0.0.1 to v0.0.3
 
 > [!CAUTION]
 > This release contains breaking API changes. Review each section below before upgrading.
@@ -150,7 +150,7 @@ Most color and cursor parameters have transitioned from flat types to `WidgetSta
 // v0.0.1
 M3EButtonDecoration(backgroundColor: Colors.blue)
 
-// v0.0.2
+// v0.0.3
 M3EButtonDecoration.styleFrom(backgroundColor: Colors.blue)
 ```
 
@@ -164,9 +164,18 @@ M3EButtonDecoration.styleFrom(backgroundColor: Colors.blue)
 | `connectedHoveredInnerRadius` | `M3EToggleButtonDecoration` | Logic merged into `hoveredRadius`. |
 | `connectedPressedInnerRadius` | `M3EToggleButtonDecoration` | Logic merged into `pressedRadius`. |
 
+### 3, double? borderRadius
+```dart
+// v0.0.1
+M3EButtonDecoration(borderRadius: BorderRadius.circular(24))
+
+// v0.0.3
+M3EButtonDecoration.styleFrom(bborderRadius: 24)
+```
+
 ### 3. Renamed components
 
-| v0.0.1 | v0.0.2 |
+| v0.0.1 | v0.0.3 |
 |--------|--------|
 | `SplitButtonM3E` | `M3ESplitButton` |
 | `SplitButtonM3EItem` | `M3ESplitButtonItem` |
@@ -249,7 +258,7 @@ M3EElevatedButton(onPressed: () {}, child: const Text('Upload'))
 | `child` | `Widget?` | `null` | Primary content. |
 | `style` | `M3EButtonStyle` | `filled` | Visual style. |
 | `size` | `M3EButtonSize` | `sm` | Size preset. Overridden by `decoration.fixedSize`. |
-| `shape` | `M3EButtonShape` | `round` | Corner radius strategy. |
+| `shape` | `M3EButtonShape` | `round` | Corner radius strategy. Ignored when `decoration.borderRadius` is set. |
 | `enabled` | `bool` | `true` | Disables without removing from the tree. |
 | `decoration` | `M3EButtonDecoration?` | `null` | Colors, radius, motion, haptics. |
 | `focusNode` | `FocusNode?` | `null` | External focus node. |
@@ -366,7 +375,7 @@ M3EToggleButtonGroup(
 |-----------|------|---------|-------------|
 | `actions` | `List<M3EToggleButtonGroupAction>` | **required** | Buttons in the group. |
 | `type` | `M3EButtonGroupType` | `standard` | `standard` (gaps) or `connected` (shared edges). |
-| `shape` | `M3EButtonShape` | `round` | Corner radius strategy. |
+| `shape` | `M3EButtonShape` | `round` | Corner radius strategy. Ignored when `decoration.borderRadius` is set. |
 | `size` | `M3EButtonSize` | `sm` | Size preset. |
 | `style` | `M3EButtonStyle` | `filled` | Visual style. |
 | `density` | `M3EButtonGroupDensity` | `regular` | `regular` or `compact`. |
@@ -472,7 +481,7 @@ M3EElevatedSplitButton<String>(items: [...], onSelected: (v) {}, onPressed: () {
 
 ## Decoration System
 
-All decoration classes are `@immutable` and support `copyWith`. Pass `null` for any field to use token defaults. Use `.styleFrom()` on any decoration class to pass flat values — `WidgetStateProperty` mapping is handled automatically.
+All decoration classes are `@immutable` and support `copyWith`. Pass `null` for any field to use token defaults. Use `.styleFrom()` on any decoration class to pass flat values — `WidgetStateProperty` mapping is handled automatically. `borderRadius` is the highest-priority base shape override in decorations and takes precedence over widget `shape`.
 
 ### `M3EButtonDecoration`
 
@@ -483,6 +492,7 @@ M3EButton(
     foregroundColor: Colors.white,
     motion: M3EMotion.expressiveSpatialFast,
     haptic: M3EHapticFeedback.medium,
+    borderRadius: 18.0,
     pressedRadius: 8.0,
     hoveredRadius: 20.0,
   ),
@@ -506,6 +516,7 @@ M3EButton(
 | `iconSize` | `double?` | Leading icon size. |
 | `motion` | `M3EMotion?` | Spring physics preset. |
 | `haptic` | `M3EHapticFeedback?` | Haptic feedback level. |
+| `borderRadius` | `double?` | Base corner radius. Overrides widget `shape`. |
 | `hoveredRadius` | `double?` | Corner radius on hover. |
 | `pressedRadius` | `double?` | Corner radius during press squish. |
 | `overlayColor` | `WidgetStateProperty<Color?>?` | Custom pressed/hovered overlay. |
@@ -521,6 +532,7 @@ M3EToggleButton(
     foregroundColor: Colors.grey.shade700,
     checkedBackgroundColor: Colors.indigo,
     checkedForegroundColor: Colors.white,
+    borderRadius: 18.0,
     checkedRadius: 8.0,
     uncheckedRadius: 24.0,
     haptic: M3EHapticFeedback.light,
@@ -538,6 +550,7 @@ M3EToggleButton(
 | `side` | `WidgetStateProperty<BorderSide?>?` | Custom border. |
 | `motion` | `M3EMotion?` | Spring physics preset. |
 | `haptic` | `M3EHapticFeedback?` | Haptic feedback level. |
+| `borderRadius` | `double?` | Base corner radius used before state-specific radius overrides. |
 | `checkedRadius` | `double?` | Corner radius in checked state. |
 | `uncheckedRadius` | `double?` | Corner radius in unchecked state. |
 | `pressedRadius` | `double?` | Corner radius during press. |
@@ -551,6 +564,7 @@ M3ESplitButton<String>(
   decoration: M3ESplitButtonDecoration.styleFrom(
     backgroundColor: Colors.teal,
     foregroundColor: Colors.white,
+    borderRadius: 18.0,
     trailingBackgroundColor: Colors.teal.shade700,
     menuBackgroundColor: Colors.teal.shade800,
     menuForegroundColor: Colors.white,
@@ -566,6 +580,7 @@ M3ESplitButton<String>(
 |-------|------|-------------|
 | `backgroundColor` | `WidgetStateProperty<Color?>?` | Base background. |
 | `foregroundColor` | `WidgetStateProperty<Color?>?` | Base foreground. |
+| `borderRadius` | `double?` | Base corner radius. Overrides widget `shape`. |
 | `trailingBackgroundColor` | `Color?` | Dropdown segment background. |
 | `trailingForegroundColor` | `Color?` | Dropdown segment icon color. |
 | `menuBackgroundColor` | `Color?` | Menu background. |

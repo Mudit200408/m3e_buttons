@@ -1,3 +1,6 @@
+## 0.0.3
+- Add `borderRadius` parameter and make it double?.
+
 ## 0.0.2
 - **Breaking Changes**:
     - **WidgetStateProperty Shift**: Most color/cursor parameters in decoration classes are now `WidgetStateProperty`.
