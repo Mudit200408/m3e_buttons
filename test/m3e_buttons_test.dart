@@ -14,7 +14,7 @@ void main() {
 
     await tester.pumpWidget(
       _testApp(
-        M3EButton(label: const Text('Save'), onPressed: () => pressed++),
+        M3EButton(child: const Text('Save'), onPressed: () => pressed++),
       ),
     );
 
@@ -32,9 +32,9 @@ void main() {
     await tester.pumpWidget(
       _testApp(
         M3EButton(
-          label: const Text('Disabled'),
           onPressed: () => pressed++,
           enabled: false,
+          child: const Text('Disabled'),
         ),
       ),
     );
@@ -43,6 +43,32 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(pressed, 0);
+  });
+
+  testWidgets('M3EButton.icon respects decoration iconAlignment end', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        M3EButton.icon(
+          onPressed: () {},
+          icon: const Icon(Icons.arrow_forward_rounded),
+          label: const Text('Aligned'),
+          decoration: const M3EButtonDecoration(
+            iconAlignment: IconAlignment.end,
+          ),
+        ),
+      ),
+    );
+
+    final filledButton = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(filledButton.style?.iconAlignment, IconAlignment.end);
+
+    final textLeft = tester.getTopLeft(find.text('Aligned')).dx;
+    final iconLeft = tester
+        .getTopLeft(find.byIcon(Icons.arrow_forward_rounded))
+        .dx;
+    expect(textLeft, lessThan(iconLeft));
   });
 
   testWidgets('M3EToggleButton reports checked changes', (tester) async {
@@ -67,22 +93,22 @@ void main() {
     expect(lastValue, false);
   });
 
-  testWidgets('SplitButtonM3E opens menu and returns selected item', (
+  testWidgets('M3ESplitButton opens menu and returns selected item', (
     tester,
   ) async {
     String? selected;
 
     await tester.pumpWidget(
       _testApp(
-        SplitButtonM3E<String>(
+        M3ESplitButton<String>(
           label: 'Actions',
           leadingIcon: Icons.more_horiz,
           decoration: const M3ESplitButtonDecoration(
             menuStyle: SplitButtonMenuStyle.native,
           ),
           items: const [
-            SplitButtonM3EItem(value: 'one', child: Text('First')),
-            SplitButtonM3EItem(value: 'two', child: Text('Second')),
+            M3ESplitButtonItem(value: 'one', child: Text('First')),
+            M3ESplitButtonItem(value: 'two', child: Text('Second')),
           ],
           onSelected: (value) => selected = value,
           onPressed: () {},
@@ -100,6 +126,36 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(selected, 'two');
+  });
+
+  testWidgets('M3ESplitButton applies backgroundBuilder', (tester) async {
+    await tester.pumpWidget(
+      _testApp(
+        M3ESplitButton<String>(
+          label: 'Styled',
+          leadingIcon: Icons.gradient_rounded,
+          items: const [M3ESplitButtonItem(value: 'one', child: Text('First'))],
+          decoration: M3ESplitButtonDecoration(
+            backgroundBuilder: (context, states, child) => Stack(
+              fit: StackFit.passthrough,
+              children: [
+                const Positioned.fill(
+                  child: ColoredBox(
+                    key: Key('split-background-layer'),
+                    color: Colors.red,
+                  ),
+                ),
+                child ?? const SizedBox.shrink(),
+              ],
+            ),
+          ),
+          onPressed: () {},
+          onSelected: (_) {},
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('split-background-layer')), findsWidgets);
   });
 
   testWidgets('M3EToggleButtonGroup emits selected index', (tester) async {
@@ -124,12 +180,12 @@ void main() {
     expect(selectedIndex, 1);
   });
 
-  test('SplitButtonM3E rejects text style', () {
+  test('M3ESplitButton rejects text style', () {
     expect(
-      () => SplitButtonM3E<String>(
+      () => M3ESplitButton<String>(
         style: M3EButtonStyle.text,
         label: 'Invalid',
-        items: const [SplitButtonM3EItem(value: 'v', child: Text('Value'))],
+        items: const [M3ESplitButtonItem(value: 'v', child: Text('Value'))],
       ),
       throwsAssertionError,
     );

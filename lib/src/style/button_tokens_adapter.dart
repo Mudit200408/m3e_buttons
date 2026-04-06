@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../internal/button_constants.dart';
-import '../style/m3e_button_enums.dart';
+import 'm3e_button_enums.dart';
 
 /// Material 3 Button Measurements
 ///
@@ -313,7 +313,6 @@ class M3EButtonTokensAdapter {
   double connectedPressedInnerRadius() => 4.0;
 
   /// Default hovered inner corner radius for connected buttons.
-  double connectedHoveredInnerRadius() => 6.0;
 
   /// Minimum touch target height for standard buttons.
   double minWidthFloor() => _cachedMinWidthFloor ?? 48.0;
