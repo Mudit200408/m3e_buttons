@@ -11,6 +11,8 @@
 
 Inspired by the [Jetpack Compose](https://developer.android.com/jetpack/compose) implementation of **Material 3 Expressive**, `m3e_buttons` brings spring-driven shape animations, a rich customization model, and tactile responsiveness to Flutter — without writing a single line of animation code yourself.
 
+**Live example:** [mudit200408.github.io/m3e_core](https://mudit200408.github.io/m3e_core/)
+
 <img src="doc/jetpack-compose-example.gif" alt="Jetpack Compose Inspiration">
 
 ---
