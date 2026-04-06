@@ -1,13 +1,7 @@
-// Copyright 2024 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
-// ignore: implementation_imports
-import 'package:m3e_buttons/src/internal/_overflow_strategy.dart';
 
 import 'tabs/button_helpers.dart';
 import 'tabs/split_button_tab.dart';
@@ -94,39 +88,30 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledButton.icon(
                 enableFeedback: true,
-                decoration: M3EButtonDecoration(
-                  haptic: M3EHapticFeedback.light,
-                ),
+                size: M3EButtonSize.sm,
+                tooltip: 'Filled',
                 label: const Text('Filled'),
                 icon: const Icon(Icons.save_rounded),
                 onPressed: () {},
               ),
-              M3EButton(
-                style: M3EButtonStyle.tonal,
+              M3EFilledButton.tonalIcon(
                 label: const Text('Tonal'),
                 icon: const Icon(Icons.share_rounded),
                 onPressed: () {},
               ),
-              M3EButton(
-                style: M3EButtonStyle.elevated,
+              M3EElevatedButton.icon(
                 label: const Text('Elevated'),
                 icon: const Icon(Icons.upload_rounded),
                 onPressed: () {},
               ),
-              M3EButton(
-                style: M3EButtonStyle.outlined,
-                label: const Text('Outlined'),
+              M3EOutlinedButton(
+                child: const Text('Outlined'),
                 onPressed: () {},
               ),
-              M3EButton(
-                style: M3EButtonStyle.text,
-                label: const Text('Text'),
-                onPressed: () {},
-              ),
-              const M3EButton(label: Text('Disabled'), onPressed: null),
+              M3ETextButton(child: const Text('Text'), onPressed: () {}),
+              const M3EFilledButton(onPressed: null, child: Text('Disabled')),
             ],
           ),
 
@@ -137,36 +122,11 @@ class _ButtonTab extends StatelessWidget {
             runSpacing: 10,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              M3EButton(
-                size: M3EButtonSize.xs,
-                style: M3EButtonStyle.tonal,
-                label: const Text('XS'),
-                onPressed: () {},
-              ),
-              M3EButton(
-                size: M3EButtonSize.sm,
-                style: M3EButtonStyle.tonal,
-                label: const Text('SM'),
-                onPressed: () {},
-              ),
-              M3EButton(
-                size: M3EButtonSize.md,
-                style: M3EButtonStyle.tonal,
-                label: const Text('MD'),
-                onPressed: () {},
-              ),
-              M3EButton(
-                size: M3EButtonSize.lg,
-                style: M3EButtonStyle.tonal,
-                label: const Text('LG'),
-                onPressed: () {},
-              ),
-              M3EButton(
-                size: M3EButtonSize.xl,
-                style: M3EButtonStyle.tonal,
-                label: const Text('XL'),
-                onPressed: () {},
-              ),
+              M3EFilledButton.tonal(child: const Text('XS'), onPressed: () {}),
+              M3EFilledButton.tonal(child: const Text('SM'), onPressed: () {}),
+              M3EFilledButton.tonal(child: const Text('MD'), onPressed: () {}),
+              M3EFilledButton.tonal(child: const Text('LG'), onPressed: () {}),
+              M3EFilledButton.tonal(child: const Text('XL'), onPressed: () {}),
             ],
           ),
 
@@ -176,24 +136,23 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
+              M3EFilledButton(
                 shape: M3EButtonShape.round,
-                label: const Text('Round (default)'),
+                child: const Text('Round (default)'),
                 onPressed: () {},
               ),
-              M3EButton(
+              M3EFilledButton(
                 shape: M3EButtonShape.square,
-                label: const Text('Square token'),
+                child: const Text('Square token'),
                 onPressed: () {},
               ),
-              M3EButton(
+              M3EFilledButton(
                 shape: M3EButtonShape.square,
-                decoration: M3EButtonDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                decoration: const M3EButtonDecoration(
                   pressedRadius: 8,
                   hoveredRadius: 12,
                 ),
-                label: const Text('borderRadius: 16'),
+                child: const Text('borderRadius: 16'),
                 onPressed: () {},
               ),
             ],
@@ -205,8 +164,7 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledButton.icon(
                 size: M3EButtonSize.custom(
                   height: 52,
                   hPadding: 28,
@@ -217,10 +175,9 @@ class _ButtonTab extends StatelessWidget {
                 icon: const Icon(Icons.tune_rounded),
                 onPressed: () {},
               ),
-              M3EButton(
-                style: M3EButtonStyle.outlined,
+              M3EOutlinedButton(
                 size: M3EButtonSize.custom(width: 160, height: 43),
-                label: const Text('Fixed width 160'),
+                child: const Text('Fixed width 160'),
                 onPressed: () {},
               ),
             ],
@@ -232,27 +189,24 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
-                style: M3EButtonStyle.tonal,
-                decoration: M3EButtonDecoration(
+              M3EFilledButton.tonalIcon(
+                decoration: M3EButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.light,
                 ),
                 label: const Text('haptic: light'),
                 icon: const Icon(Icons.vibration),
                 onPressed: () {},
               ),
-              M3EButton(
-                style: M3EButtonStyle.tonal,
-                decoration: M3EButtonDecoration(
+              M3EFilledButton.tonalIcon(
+                decoration: M3EButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.medium,
                 ),
                 label: const Text('haptic: medium'),
                 icon: const Icon(Icons.vibration),
                 onPressed: () {},
               ),
-              M3EButton(
-                style: M3EButtonStyle.tonal,
-                decoration: M3EButtonDecoration(
+              M3EFilledButton.tonalIcon(
+                decoration: M3EButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.heavy,
                 ),
                 label: const Text('haptic: heavy'),
@@ -270,41 +224,37 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledButton(
                 shape: M3EButtonShape.round,
-                label: const Text('Slow 300'),
-                decoration: M3EButtonDecoration(
+                decoration: M3EButtonDecoration.styleFrom(
                   motion: M3EMotion.standardSpatialSlow,
                 ),
                 onPressed: () {},
+                child: const Text('Slow 300'),
               ),
-              M3EButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledButton(
                 shape: M3EButtonShape.round,
-                label: const Text('Default 1400'),
-                decoration: M3EButtonDecoration(
+                decoration: M3EButtonDecoration.styleFrom(
                   motion: M3EMotion.standardSpatialFast,
                 ),
                 onPressed: () {},
+                child: const Text('Default 1400'),
               ),
-              M3EButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledButton(
                 shape: M3EButtonShape.round,
-                label: const Text('Snappy 3800'),
-                decoration: M3EButtonDecoration(
+                decoration: M3EButtonDecoration.styleFrom(
                   motion: M3EMotion.standardEffectsFast,
                 ),
                 onPressed: () {},
+                child: const Text('Snappy 3800'),
               ),
-              M3EButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledButton(
                 shape: M3EButtonShape.round,
-                label: const Text('Bouncy 0.3'),
-                decoration: M3EButtonDecoration(
+                decoration: M3EButtonDecoration.styleFrom(
                   motion: M3EMotion.custom(600, 0.3),
                 ),
                 onPressed: () {},
+                child: const Text('Bouncy 0.3'),
               ),
             ],
           ),
@@ -317,8 +267,7 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledButton.icon(
                 label: const Text('Long press me'),
                 icon: const Icon(Icons.touch_app_rounded),
                 onPressed: () {},
@@ -331,8 +280,7 @@ class _ButtonTab extends StatelessWidget {
                   );
                 },
               ),
-              M3EButton(
-                style: M3EButtonStyle.tonal,
+              M3EFilledButton.tonalIcon(
                 label: const Text('Long press for menu'),
                 icon: const Icon(Icons.more_horiz_rounded),
                 onPressed: () {},
@@ -362,19 +310,17 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
-                style: M3EButtonStyle.tonal,
-                label: const Text('With feedback'),
-                decoration: M3EButtonDecoration(
+              M3EFilledButton.tonal(
+                decoration: M3EButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.light,
                 ),
                 onPressed: () {},
+                child: const Text('With feedback'),
               ),
-              M3EButton(
-                style: M3EButtonStyle.tonal,
-                label: const Text('No feedback'),
+              M3EFilledButton.tonal(
                 enableFeedback: false,
                 onPressed: () {},
+                child: const Text('No feedback'),
               ),
             ],
           ),
@@ -387,16 +333,14 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
-                style: M3EButtonStyle.filled,
-                label: const Text('Default ripple'),
+              M3EFilledButton(
+                child: const Text('Default ripple'),
                 onPressed: () {},
               ),
-              M3EButton(
-                style: M3EButtonStyle.filled,
-                label: const Text('No splash'),
+              M3EFilledButton(
                 splashFactory: NoSplash.splashFactory,
                 onPressed: () {},
+                child: const Text('No splash'),
               ),
             ],
           ),
@@ -409,9 +353,7 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
-                style: M3EButtonStyle.filled,
-                label: const Text('Custom overlay'),
+              M3EFilledButton(
                 decoration: M3EButtonDecoration(
                   overlayColor: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.pressed)) {
@@ -424,10 +366,9 @@ class _ButtonTab extends StatelessWidget {
                   }),
                 ),
                 onPressed: () {},
+                child: const Text('Custom overlay'),
               ),
-              M3EButton(
-                style: M3EButtonStyle.outlined,
-                label: const Text('Custom overlay'),
+              M3EOutlinedButton(
                 decoration: M3EButtonDecoration(
                   overlayColor: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.pressed)) {
@@ -440,6 +381,7 @@ class _ButtonTab extends StatelessWidget {
                   }),
                 ),
                 onPressed: () {},
+                child: const Text('Custom overlay'),
               ),
             ],
           ),
@@ -452,29 +394,113 @@ class _ButtonTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              M3EButton(
-                style: M3EButtonStyle.filled,
-                label: const Text('No tint'),
-                onPressed: () {},
-              ),
-              M3EButton(
-                style: M3EButtonStyle.filled,
-                label: const Text('Blue tint'),
-                decoration: M3EButtonDecoration(
-                  surfaceTintColor: WidgetStateProperty.all(
-                    cs.primary.withValues(alpha: 0.3),
-                  ),
+              M3EFilledButton(child: const Text('No tint'), onPressed: () {}),
+              M3EFilledButton(
+                decoration: M3EButtonDecoration.styleFrom(
+                  surfaceTintColor: cs.primary.withValues(alpha: 0.3),
                 ),
                 onPressed: () {},
+                child: const Text('Blue tint'),
               ),
-              M3EButton(
-                style: M3EButtonStyle.elevated,
-                label: const Text('Tertiary tint'),
-                decoration: M3EButtonDecoration(
-                  surfaceTintColor: WidgetStateProperty.all(
-                    cs.tertiary.withValues(alpha: 0.5),
+              M3EElevatedButton(
+                decoration: M3EButtonDecoration.styleFrom(
+                  surfaceTintColor: cs.tertiary.withValues(alpha: 0.5),
+                ),
+                onPressed: () {},
+                child: const Text('Tertiary tint'),
+              ),
+            ],
+          ),
+
+          // ── ButtonStyle Alignment & Dimensions ─────────────────────────────
+          _Header('Extended Dimensions & Layout', tt),
+          _Sub(
+            'Uses standard ButtonStyle sizes, padding, and alignments via M3EButtonDecoration.',
+            cs,
+            tt,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              M3EFilledButton(
+                decoration: M3EButtonDecoration.styleFrom(
+                  fixedSize: Size(150, 80),
+                  alignment: Alignment.bottomRight,
+                  padding: EdgeInsets.all(8),
+                ),
+                child: const Text('Fixed bottom right'),
+                onPressed: () {},
+              ),
+              M3EFilledButton.icon(
+                decoration: M3EButtonDecoration.styleFrom(
+                  minimumSize: Size(150, 50),
+                  iconSize: 32,
+                  foregroundColor: Colors.yellowAccent,
+                  textStyle: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
                   ),
                 ),
+                icon: const Icon(Icons.star_rounded),
+                label: const Text('LARGE'),
+                onPressed: () {},
+              ),
+            ],
+          ),
+
+          // ── Advanced Material Styling ──────────────────────────────────────
+          _Header('Advanced Material Styling', tt),
+          _Sub(
+            'elevation, shadowColor, visualDensity, backgroundBuilder, foregroundBuilder.',
+            cs,
+            tt,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              M3EElevatedButton(
+                decoration: M3EButtonDecoration.styleFrom(
+                  elevation: 12,
+                  shadowColor: Colors.blueAccent,
+                ),
+                child: const Text('Glowing Shadow'),
+                onPressed: () {},
+              ),
+              M3EFilledButton(
+                decoration: M3EButtonDecoration.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: const Text('Compact Density'),
+                onPressed: () {},
+              ),
+              M3EOutlinedButton(
+                decoration: M3EButtonDecoration.styleFrom(
+                  backgroundBuilder: (context, states, child) {
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Colors.purple, Colors.pink, Colors.orange],
+                        ),
+                      ),
+                      child: child,
+                    );
+                  },
+                  foregroundBuilder: (context, states, child) {
+                    return DefaultTextStyle(
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      child: child!,
+                    );
+                  },
+                ),
+                child: const Text('Gradient Builder'),
                 onPressed: () {},
               ),
             ],
@@ -505,8 +531,7 @@ class _HoverExampleState extends State<_HoverExample> {
       spacing: 10,
       runSpacing: 10,
       children: [
-        M3EButton(
-          style: M3EButtonStyle.tonal,
+        M3EFilledButton.tonalIcon(
           label: Text(_isHovered ? 'Hovering!' : 'Hover over me'),
           icon: Icon(_isHovered ? Icons.check_circle : Icons.touch_app),
           onPressed: () {},
@@ -588,7 +613,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
                 icon: const Icon(Icons.favorite_border),
                 checkedIcon: const Icon(Icons.favorite),
                 checked: _tbFav,
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   checkedForegroundColor: cs.error,
                   haptic: M3EHapticFeedback.light,
                 ),
@@ -599,7 +624,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
                 icon: const Icon(Icons.star_border_rounded),
                 checkedIcon: const Icon(Icons.star_rounded),
                 checked: _tbStar,
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   checkedBackgroundColor: cs.tertiaryContainer,
                   checkedForegroundColor: cs.onTertiaryContainer,
                   haptic: M3EHapticFeedback.light,
@@ -610,7 +635,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
                 icon: const Icon(Icons.bookmark_border_rounded),
                 checkedIcon: const Icon(Icons.bookmark_rounded),
                 checked: _tbBookmark,
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   checkedBackgroundColor: cs.primaryContainer,
                   checkedForegroundColor: cs.onPrimaryContainer,
                 ),
@@ -620,7 +645,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
                 icon: const Icon(Icons.thumb_up_outlined),
                 checkedIcon: const Icon(Icons.thumb_up),
                 checked: _tbThumb,
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   checkedBackgroundColor: cs.primaryContainer,
                   checkedForegroundColor: cs.onPrimaryContainer,
                 ),
@@ -644,8 +669,8 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
             children: [
               _Labelled(
                 'filled',
-                M3EToggleButton(
-                  style: M3EButtonStyle.filled,
+                M3EFilledToggleButton(
+                  tooltip: 'Filled',
                   icon: const Icon(Icons.add_rounded),
                   checkedIcon: const Icon(Icons.check_rounded),
                   checked: _tbsFilled,
@@ -654,8 +679,8 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               ),
               _Labelled(
                 'elevated',
-                M3EToggleButton(
-                  style: M3EButtonStyle.elevated,
+                M3EElevatedToggleButton(
+                  tooltip: 'Elevated',
                   icon: const Icon(Icons.add_rounded),
                   checkedIcon: const Icon(Icons.check_rounded),
                   checked: _tbsElevated,
@@ -664,8 +689,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               ),
               _Labelled(
                 'tonal',
-                M3EToggleButton(
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.add_rounded),
                   checkedIcon: const Icon(Icons.check_rounded),
                   checked: _tbsTonal,
@@ -674,8 +698,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               ),
               _Labelled(
                 'outlined',
-                M3EToggleButton(
-                  style: M3EButtonStyle.outlined,
+                M3EOutlinedToggleButton(
                   icon: const Icon(Icons.add_rounded),
                   checkedIcon: const Icon(Icons.check_rounded),
                   checked: _tbsOutlined,
@@ -684,8 +707,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               ),
               _Labelled(
                 'text',
-                M3EToggleButton(
-                  style: M3EButtonStyle.text,
+                M3ETextToggleButton(
                   icon: const Icon(Icons.add_rounded),
                   checkedIcon: const Icon(Icons.check_rounded),
                   checked: _tbsText,
@@ -705,45 +727,35 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
             children: [
               _Labelled(
                 'xs',
-                M3EToggleButton(
-                  size: M3EButtonSize.xs,
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.music_note_rounded),
                   onCheckedChange: (_) {},
                 ),
               ),
               _Labelled(
                 'sm',
-                M3EToggleButton(
-                  size: M3EButtonSize.sm,
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.music_note_rounded),
                   onCheckedChange: (_) {},
                 ),
               ),
               _Labelled(
                 'md',
-                M3EToggleButton(
-                  size: M3EButtonSize.md,
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.music_note_rounded),
                   onCheckedChange: (_) {},
                 ),
               ),
               _Labelled(
                 'lg',
-                M3EToggleButton(
-                  size: M3EButtonSize.lg,
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.music_note_rounded),
                   onCheckedChange: (_) {},
                 ),
               ),
               _Labelled(
                 'xl',
-                M3EToggleButton(
-                  size: M3EButtonSize.xl,
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.music_note_rounded),
                   onCheckedChange: (_) {},
                 ),
@@ -767,12 +779,10 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
             children: [
               _Labelled(
                 'A',
-                M3EToggleButton(
-                  style: M3EButtonStyle.tonal,
-                  size: M3EButtonSize.md,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.crop_square_rounded),
                   checkedIcon: const Icon(Icons.check_rounded),
-                  decoration: M3EToggleButtonDecoration(
+                  decoration: M3EToggleButtonDecoration.styleFrom(
                     uncheckedRadius: 40,
                     checkedRadius: 8,
                     pressedRadius: 4,
@@ -783,12 +793,10 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               ),
               _Labelled(
                 'B',
-                M3EToggleButton(
-                  style: M3EButtonStyle.tonal,
-                  size: M3EButtonSize.md,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.circle_outlined),
                   checkedIcon: const Icon(Icons.check_rounded),
-                  decoration: M3EToggleButtonDecoration(
+                  decoration: M3EToggleButtonDecoration.styleFrom(
                     uncheckedRadius: 4,
                     checkedRadius: 20,
                   ),
@@ -798,9 +806,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               ),
               _Labelled(
                 'C defaults',
-                M3EToggleButton(
-                  style: M3EButtonStyle.tonal,
-                  size: M3EButtonSize.md,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.auto_fix_high_rounded),
                   checked: _tbCustomC,
                   onCheckedChange: (v) => setState(() => _tbCustomC = v),
@@ -824,16 +830,14 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
             children: [
               _Labelled(
                 'default',
-                M3EToggleButton(
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   icon: const Icon(Icons.crop_square_rounded),
                   onCheckedChange: (_) {},
                 ),
               ),
               _Labelled(
                 'w:80',
-                M3EToggleButton(
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   size: M3EButtonSize.custom(width: 80),
                   icon: const Icon(Icons.crop_landscape_rounded),
                   onCheckedChange: (_) {},
@@ -841,8 +845,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               ),
               _Labelled(
                 'h:64',
-                M3EToggleButton(
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   size: M3EButtonSize.custom(height: 64),
                   icon: const Icon(Icons.crop_portrait_rounded),
                   onCheckedChange: (_) {},
@@ -850,8 +853,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               ),
               _Labelled(
                 'w:100 h:48',
-                M3EToggleButton(
-                  style: M3EButtonStyle.tonal,
+                M3EFilledToggleButton.tonal(
                   size: M3EButtonSize.custom(width: 100, height: 48),
                   icon: const Icon(Icons.crop_rounded),
                   onCheckedChange: (_) {},
@@ -873,35 +875,31 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
             runSpacing: 12,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              M3EToggleButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledToggleButton(
                 icon: const Icon(Icons.favorite_border),
                 checkedIcon: const Icon(Icons.favorite),
                 label: const Text('Like'),
                 checkedLabel: const Text('Liked'),
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.light,
                 ),
                 onCheckedChange: (_) {},
               ),
-              M3EToggleButton(
-                style: M3EButtonStyle.outlined,
+              M3EOutlinedToggleButton(
                 icon: const Icon(Icons.bookmark_border_rounded),
                 checkedIcon: const Icon(Icons.bookmark_rounded),
                 label: const Text('Save'),
                 checkedLabel: const Text('Saved'),
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.light,
                 ),
                 onCheckedChange: (_) {},
               ),
-              M3EToggleButton(
-                style: M3EButtonStyle.tonal,
-                size: M3EButtonSize.md,
+              M3EFilledToggleButton.tonal(
                 icon: const Icon(Icons.notifications_none_rounded),
                 checkedIcon: const Icon(Icons.notifications_active_rounded),
                 label: const Text('Notify'),
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.light,
                 ),
                 onCheckedChange: (_) {},
@@ -921,7 +919,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               M3EToggleButton(
                 icon: const Icon(Icons.edit_outlined),
                 checkedIcon: const Icon(Icons.edit),
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.light,
                 ),
                 onCheckedChange: (_) {},
@@ -937,7 +935,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               M3EToggleButton(
                 icon: const Icon(Icons.copy_outlined),
                 checkedIcon: const Icon(Icons.check),
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.light,
                 ),
                 onCheckedChange: (_) {},
@@ -971,7 +969,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
               M3EToggleButton(
                 icon: const Icon(Icons.favorite_border),
                 checkedIcon: const Icon(Icons.favorite),
-                decoration: M3EToggleButtonDecoration(
+                decoration: M3EToggleButtonDecoration.styleFrom(
                   haptic: M3EHapticFeedback.light,
                 ),
                 onCheckedChange: (_) {},
@@ -1033,8 +1031,7 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
                 ),
                 onCheckedChange: (_) {},
               ),
-              M3EToggleButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledToggleButton(
                 icon: const Icon(Icons.visibility_outlined),
                 checkedIcon: const Icon(Icons.visibility),
                 decoration: M3EToggleButtonDecoration(
@@ -1062,25 +1059,19 @@ class _ToggleButtonTabState extends State<_ToggleButtonTab> {
             runSpacing: 12,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              M3EToggleButton(
-                style: M3EButtonStyle.filled,
+              M3EFilledToggleButton(
                 icon: const Icon(Icons.dark_mode_outlined),
                 checkedIcon: const Icon(Icons.dark_mode),
-                decoration: M3EToggleButtonDecoration(
-                  surfaceTintColor: WidgetStateProperty.all(
-                    cs.primary.withValues(alpha: 0.3),
-                  ),
+                decoration: M3EToggleButtonDecoration.styleFrom(
+                  surfaceTintColor: cs.primary.withValues(alpha: 0.3),
                 ),
                 onCheckedChange: (_) {},
               ),
-              M3EToggleButton(
-                style: M3EButtonStyle.elevated,
+              M3EElevatedToggleButton(
                 icon: const Icon(Icons.light_mode_outlined),
                 checkedIcon: const Icon(Icons.light_mode),
-                decoration: M3EToggleButtonDecoration(
-                  surfaceTintColor: WidgetStateProperty.all(
-                    cs.tertiary.withValues(alpha: 0.5),
-                  ),
+                decoration: M3EToggleButtonDecoration.styleFrom(
+                  surfaceTintColor: cs.tertiary.withValues(alpha: 0.5),
                 ),
                 onCheckedChange: (_) {},
               ),
@@ -1115,7 +1106,7 @@ class _ToggleHoverExampleState extends State<_ToggleHoverExample> {
       children: [
         M3EToggleButton(
           icon: const Icon(Icons.touch_app),
-          decoration: M3EToggleButtonDecoration(
+          decoration: M3EToggleButtonDecoration.styleFrom(
             haptic: M3EHapticFeedback.light,
           ),
           onCheckedChange: (_) {},
@@ -1388,7 +1379,6 @@ class _TbgStressTestGroupState extends State<_TbgStressTestGroup> {
   @override
   Widget build(BuildContext context) => M3EToggleButtonGroup(
     style: M3EButtonStyle.tonal,
-    size: M3EButtonSize.sm,
     spacing: 8.0,
     selectedIndex: _index,
     onSelectedIndexChanged: (i) => setState(() => _index = i),
@@ -1415,9 +1405,8 @@ class _TbgMultiSelectGroupState extends State<_TbgMultiSelectGroup> {
   @override
   Widget build(BuildContext context) => M3EToggleButtonGroup(
     style: M3EButtonStyle.filled,
-    size: M3EButtonSize.md,
     spacing: 8.0,
-    decoration: const M3EToggleButtonDecoration(
+    decoration: M3EToggleButtonDecoration.styleFrom(
       checkedRadius: 99,
       pressedRadius: 8,
       uncheckedRadius: 18,
@@ -1428,25 +1417,25 @@ class _TbgMultiSelectGroupState extends State<_TbgMultiSelectGroup> {
     actions: [
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_bold_rounded),
-        decoration: const M3EToggleButtonDecoration(
+        decoration: M3EToggleButtonDecoration.styleFrom(
           haptic: M3EHapticFeedback.light,
         ),
       ),
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_italic_rounded),
-        decoration: const M3EToggleButtonDecoration(
+        decoration: M3EToggleButtonDecoration.styleFrom(
           haptic: M3EHapticFeedback.light,
         ),
       ),
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_underline_rounded),
-        decoration: const M3EToggleButtonDecoration(
+        decoration: M3EToggleButtonDecoration.styleFrom(
           haptic: M3EHapticFeedback.light,
         ),
       ),
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_strikethrough_rounded),
-        decoration: const M3EToggleButtonDecoration(
+        decoration: M3EToggleButtonDecoration.styleFrom(
           haptic: M3EHapticFeedback.light,
         ),
       ),
@@ -1469,7 +1458,7 @@ class _TbgRtlSingleSelectGroupState extends State<_TbgRtlSingleSelectGroup> {
     child: M3EToggleButtonGroup(
       style: M3EButtonStyle.filled,
       spacing: 8.0,
-      decoration: const M3EToggleButtonDecoration(
+      decoration: M3EToggleButtonDecoration.styleFrom(
         motion: M3EMotion.standardOverflow,
       ),
       neighborSquish: true,
@@ -1479,28 +1468,28 @@ class _TbgRtlSingleSelectGroupState extends State<_TbgRtlSingleSelectGroup> {
         M3EToggleButtonGroupAction(
           icon: const Icon(Icons.format_bold_rounded),
           label: const Text('B'),
-          decoration: const M3EToggleButtonDecoration(
+          decoration: M3EToggleButtonDecoration.styleFrom(
             haptic: M3EHapticFeedback.light,
           ),
         ),
         M3EToggleButtonGroupAction(
           icon: const Icon(Icons.format_italic_rounded),
           label: const Text('I'),
-          decoration: const M3EToggleButtonDecoration(
+          decoration: M3EToggleButtonDecoration.styleFrom(
             haptic: M3EHapticFeedback.light,
           ),
         ),
         M3EToggleButtonGroupAction(
           icon: const Icon(Icons.format_underline_rounded),
           label: const Text('U'),
-          decoration: const M3EToggleButtonDecoration(
+          decoration: M3EToggleButtonDecoration.styleFrom(
             haptic: M3EHapticFeedback.light,
           ),
         ),
         M3EToggleButtonGroupAction(
           icon: const Icon(Icons.format_strikethrough_rounded),
           label: const Text('S'),
-          decoration: const M3EToggleButtonDecoration(
+          decoration: M3EToggleButtonDecoration.styleFrom(
             haptic: M3EHapticFeedback.light,
           ),
         ),
@@ -1521,10 +1510,9 @@ class _TbgCheckedLabelGroupState extends State<_TbgCheckedLabelGroup> {
   @override
   Widget build(BuildContext context) => M3EToggleButtonGroup(
     style: M3EButtonStyle.filled,
-    size: M3EButtonSize.sm,
     spacing: 8.0,
     expandedRatio: 0.15,
-    decoration: const M3EToggleButtonDecoration(
+    decoration: M3EToggleButtonDecoration.styleFrom(
       motion: M3EMotion.expressiveSpatialDefault,
     ),
     selectedIndices: _selectedIndices,
@@ -1534,28 +1522,28 @@ class _TbgCheckedLabelGroupState extends State<_TbgCheckedLabelGroup> {
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_bold_rounded),
         checkedLabel: const Text('Bold'),
-        decoration: const M3EToggleButtonDecoration(
+        decoration: M3EToggleButtonDecoration.styleFrom(
           haptic: M3EHapticFeedback.light,
         ),
       ),
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_italic_rounded),
         checkedLabel: const Text('Italic'),
-        decoration: const M3EToggleButtonDecoration(
+        decoration: M3EToggleButtonDecoration.styleFrom(
           haptic: M3EHapticFeedback.light,
         ),
       ),
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_underline_rounded),
         checkedLabel: const Text('Underline'),
-        decoration: const M3EToggleButtonDecoration(
+        decoration: M3EToggleButtonDecoration.styleFrom(
           haptic: M3EHapticFeedback.light,
         ),
       ),
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_strikethrough_rounded),
         checkedLabel: const Text('Strike'),
-        decoration: const M3EToggleButtonDecoration(
+        decoration: M3EToggleButtonDecoration.styleFrom(
           haptic: M3EHapticFeedback.light,
         ),
       ),
@@ -1576,7 +1564,6 @@ class _TbgLabeledSingleSelectGroupState
   @override
   Widget build(BuildContext context) => M3EToggleButtonGroup(
     style: M3EButtonStyle.tonal,
-    size: M3EButtonSize.md,
     spacing: 8.0,
     selectedIndex: _index,
     onSelectedIndexChanged: (i) => setState(() => _index = i ?? _index),
@@ -1642,11 +1629,10 @@ class _MediaToggleButtonState extends State<_MediaToggleButton> {
   @override
   Widget build(BuildContext context) => M3EToggleButton(
     style: M3EButtonStyle.outlined,
-    size: M3EButtonSize.lg,
     icon: widget.icon,
     checkedIcon: widget.checkedIcon,
     checked: _checked,
-    decoration: const M3EToggleButtonDecoration(
+    decoration: M3EToggleButtonDecoration.styleFrom(
       checkedRadius: 10,
       pressedRadius: 4,
     ),
@@ -1669,7 +1655,7 @@ class _JetpackComposeExampleState extends State<_JetpackComposeExample> {
     expandedRatio: 0.08,
 
     size: M3EButtonSize.custom(height: 80),
-    decoration: M3EToggleButtonDecoration(
+    decoration: M3EToggleButtonDecoration.styleFrom(
       haptic: M3EHapticFeedback.light,
 
       motion: M3EMotion.expressiveSpatialDefault,
@@ -1700,7 +1686,7 @@ class _TbgPerActionColorsGroup extends StatelessWidget {
       children: [
         _ColorToggleButton(
           icon: const Icon(Icons.favorite_rounded),
-          decoration: M3EToggleButtonDecoration(
+          decoration: M3EToggleButtonDecoration.styleFrom(
             backgroundColor: cs.errorContainer,
             foregroundColor: cs.onErrorContainer,
             checkedBackgroundColor: cs.error,
@@ -1711,7 +1697,7 @@ class _TbgPerActionColorsGroup extends StatelessWidget {
         const SizedBox(width: 8),
         _ColorToggleButton(
           icon: const Icon(Icons.star_rounded),
-          decoration: M3EToggleButtonDecoration(
+          decoration: M3EToggleButtonDecoration.styleFrom(
             backgroundColor: cs.tertiaryContainer,
             foregroundColor: cs.onTertiaryContainer,
             checkedBackgroundColor: cs.tertiary,
@@ -1722,7 +1708,7 @@ class _TbgPerActionColorsGroup extends StatelessWidget {
         const SizedBox(width: 8),
         _ColorToggleButton(
           icon: const Icon(Icons.share_rounded),
-          decoration: M3EToggleButtonDecoration(
+          decoration: M3EToggleButtonDecoration.styleFrom(
             backgroundColor: cs.primaryContainer,
             foregroundColor: cs.onPrimaryContainer,
             checkedBackgroundColor: cs.primary,
@@ -1750,7 +1736,6 @@ class _ColorToggleButtonState extends State<_ColorToggleButton> {
   @override
   Widget build(BuildContext context) => M3EToggleButton(
     style: M3EButtonStyle.filled,
-    size: M3EButtonSize.md,
     icon: widget.icon,
     checked: _checked,
     decoration: widget.decoration,
@@ -1772,16 +1757,24 @@ class _TbgConnectedRoundGroupState extends State<_TbgConnectedRoundGroup> {
     type: M3EButtonGroupType.connected,
     shape: M3EButtonShape.round,
     style: M3EButtonStyle.tonal,
-    size: M3EButtonSize.md,
     spacing: 8.0,
     selectedIndex: _index,
     onSelectedIndexChanged: (i) => setState(() => _index = i ?? _index),
+    decoration: M3EToggleButtonDecoration.styleFrom(
+      hoveredRadius: 6,
+      pressedRadius: 2,
+      connectedInnerRadius: 10,
+      checkedRadius: 99,
+      uncheckedRadius: 12,
+    ),
     actions: [
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_align_left_rounded),
+        tooltip: 'Left',
       ),
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_align_center_rounded),
+        tooltip: 'Center',
       ),
       M3EToggleButtonGroupAction(
         icon: const Icon(Icons.format_align_right_rounded),
@@ -1807,10 +1800,9 @@ class _TbgConnectedSquareGroupState extends State<_TbgConnectedSquareGroup> {
     type: M3EButtonGroupType.connected,
     shape: M3EButtonShape.square,
     style: M3EButtonStyle.filled,
-    size: M3EButtonSize.md,
     spacing: 8.0,
     selectedIndex: _index,
-    decoration: M3EToggleButtonDecoration(
+    decoration: M3EToggleButtonDecoration.styleFrom(
       connectedInnerRadius: 10,
       pressedRadius: 3,
       motion: M3EMotion.custom(600, 0.7),
@@ -1850,10 +1842,9 @@ class _TbgConnectedExampleState extends State<_TbgConnectedExample> {
     type: M3EButtonGroupType.connected,
     shape: M3EButtonShape.square,
     style: M3EButtonStyle.filled,
-    size: M3EButtonSize.sm,
     spacing: 8.0,
     selectedIndex: _index,
-    decoration: M3EToggleButtonDecoration(
+    decoration: M3EToggleButtonDecoration.styleFrom(
       connectedInnerRadius: 10,
       pressedRadius: 3,
       motion: M3EMotion.custom(600, 0.7),
@@ -1934,7 +1925,6 @@ class _OverflowToggleDemoGroupState extends State<_OverflowToggleDemoGroup> {
 
     final group = M3EToggleButtonGroup(
       style: widget.style,
-      size: M3EButtonSize.md,
       overflow: widget.overflow,
       selectedIndex: _selectedIndex,
       onSelectedIndexChanged: (i) => setState(() => _selectedIndex = i),
@@ -1945,7 +1935,6 @@ class _OverflowToggleDemoGroupState extends State<_OverflowToggleDemoGroup> {
     if (widget.overflowMenuStyle != null) {
       result = M3EToggleButtonGroup(
         style: widget.style,
-        size: M3EButtonSize.md,
         overflow: widget.overflow,
         overflowMenuStyle: widget.overflowMenuStyle!,
         overflowPopupDecoration: overflowPopupDecoration,
@@ -1999,7 +1988,6 @@ class _CustomOverflowDemoGroupState extends State<_CustomOverflowDemoGroup> {
   Widget build(BuildContext context) {
     return M3EToggleButtonGroup(
       style: M3EButtonStyle.tonal,
-      size: M3EButtonSize.sm,
       overflowStrategy: const _DialogOverflowStrategyDemo(),
       selectedIndex: _selectedIndex,
       onSelectedIndexChanged: (i) => setState(() => _selectedIndex = i ?? 0),
