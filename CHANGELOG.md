@@ -1,3 +1,6 @@
+## 0.0.4
+- toggle-button: Match the button colors to M3E color spec
+
 ## 0.0.3
 - Add `borderRadius` parameter and make it double?.
 

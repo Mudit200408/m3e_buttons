@@ -18,7 +18,7 @@ Inspired by the [Jetpack Compose](https://developer.android.com/jetpack/compose)
 ---
 
 > [!WARNING]
-> **Breaking changes in v0.0.3** — If you are upgrading from v0.0.1, please read the [Migration Guide](#migration-from-v001-to-v002) before updating. Several parameters have been renamed, removed, or replaced with `WidgetStateProperty`-based equivalents. Component class names have also changed.
+> **Breaking changes in v0.0.3+** — If you are upgrading from v0.0.1, please read the [Migration Guide](#migration-from-v001-to-v002) before updating. Several parameters have been renamed, removed, or replaced with `WidgetStateProperty`-based equivalents. Component class names have also changed.
 
 ---
 
@@ -85,7 +85,7 @@ Or add manually to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  m3e_buttons: ^0.0.2
+  m3e_buttons: ^0.0.4
 ```
 
 ```dart
