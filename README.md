@@ -379,7 +379,7 @@ M3EToggleButtonGroup(
 | `size` | `M3EButtonSize` | `sm` | Size preset. |
 | `style` | `M3EButtonStyle` | `filled` | Visual style. |
 | `density` | `M3EButtonGroupDensity` | `regular` | `regular` or `compact`. |
-| `spacing` | `double?` | `null` | Custom gap in dp. Overrides `density`. |
+| `spacing` | `double?` | `null` | Custom gap in dp. Overrides `density`. Ignored when `type` is `connected`. |
 | `direction` | `Axis` | `horizontal` | Layout direction. |
 | `selectedIndex` | `int?` | `null` | Controlled single-select state. |
 | `selectedIndices` | `Set<int>?` | `null` | Controlled multi-select state. |
