@@ -1,3 +1,7 @@
+## 0.0.5
+- fixup: fix connected toggle button layout on mobile devices
+- example: update connected button group demo and gradle properties
+
 ## 0.0.4
 - toggle-button: Match the button colors to M3E color spec
 

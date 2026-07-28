@@ -85,7 +85,7 @@ Or add manually to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  m3e_buttons: ^0.0.4
+  m3e_buttons: ^0.0.5
 ```
 
 ```dart
