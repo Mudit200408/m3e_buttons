@@ -1,3 +1,8 @@
+#  0.0.6
+- toggle-button: expose alignment parameter in `M3EToggleButtonDecoration` and `styleFrom`
+- toggle-button: add allowMultilineLabel flag to enable wrapping label content
+- buttons: update label text style to match M3E typography specs [Contributed by @paul-ube]
+
 ## 0.0.5
 - fixup: fix connected toggle button layout on mobile devices
 - example: update connected button group demo and gradle properties

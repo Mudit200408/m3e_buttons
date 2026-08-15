@@ -11,7 +11,7 @@
 
 Inspired by the [Jetpack Compose](https://developer.android.com/jetpack/compose) implementation of **Material 3 Expressive**, `m3e_buttons` brings spring-driven shape animations, a rich customization model, and tactile responsiveness to Flutter — without writing a single line of animation code yourself.
 
-**Live example:** [mudit200408.github.io/m3e_core](https://mudit200408.github.io/m3e_core/)
+**Live example:** [m3e_core](https://mudit200408.github.io/m3e_core/)
 
 <img src="doc/jetpack-compose-example.gif" alt="Jetpack Compose Inspiration">
 
@@ -85,7 +85,7 @@ Or add manually to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  m3e_buttons: ^0.0.5
+  m3e_buttons: ^0.0.6
 ```
 
 ```dart
@@ -324,6 +324,7 @@ M3EOutlinedToggleButton(onCheckedChange: (v) {}, icon: const Icon(Icons.star_bor
 | `checkedIcon` | `Widget?` | `null` | Checked icon. Falls back to `icon`. |
 | `label` | `Widget?` | `null` | Text label (makes button content-width). |
 | `checkedLabel` | `Widget?` | `null` | Checked label. Falls back to `label`. |
+| `allowMultilineLabel` | `bool` | `false` | When `true`, enables wrapping multiline label content instead of clipping. |
 | `checked` | `bool?` | `null` | External state. `null` = internal management. |
 | `style` | `M3EButtonStyle` | `filled` | Visual style. |
 | `size` | `M3EButtonSize` | `sm` | Size preset. |
@@ -556,6 +557,7 @@ M3EToggleButton(
 | `pressedRadius` | `double?` | Corner radius during press. |
 | `hoveredRadius` | `double?` | Corner radius on hover. |
 | `connectedInnerRadius` | `double?` | Inner corner radius for connected groups. |
+| `alignment` | `AlignmentGeometry?` | Custom alignment for button content. |
 
 ### `M3ESplitButtonDecoration`
 
