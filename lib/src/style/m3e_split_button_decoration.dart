@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'm3e_button_decoration.dart';
 import 'm3e_button_enums.dart';
