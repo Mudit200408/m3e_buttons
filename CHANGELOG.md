@@ -1,4 +1,8 @@
-#  0.0.6
+# 1.0.0
+- pubspec: migrate to standalone material_ui package for flutter 3.47
+- pubspec: Update the minimum flutter SDK to 3.47.0
+
+# 0.0.6
 - toggle-button: expose alignment parameter in `M3EToggleButtonDecoration` and `styleFrom`
 - toggle-button: add allowMultilineLabel flag to enable wrapping label content
 - buttons: update label text style to match M3E typography specs [Contributed by @paul-ube]

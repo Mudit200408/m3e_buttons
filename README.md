@@ -77,18 +77,23 @@ Flutter's built-in buttons don't animate their shape on press. Material 3 Expres
 
 ## Installation
 
-```bash
-flutter pub add m3e_buttons
-```
+> [!IMPORTANT]
+> **Flutter 3.47+ & `material_ui` Requirement (v1.0.0+)**:
+> Starting with `v1.0.0`, `m3e_buttons` is migrated to use the standalone `material_ui` package decoupled in **Flutter 3.47.0**.
+> - Requires Flutter SDK **`>=3.47.0`**.
+> - Ensure your app imports `package:material_ui/material_ui.dart` (or run `dart fix --apply --code=migrate_design_widgets`).
+> - If you are on Flutter `< 3.47.0`, please use `m3e_buttons: ^0.0.6`.
 
-Or add manually to `pubspec.yaml`:
+Add `m3e_buttons` and `material_ui` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  m3e_buttons: ^0.0.6
+  material_ui: ^1.0.0
+  m3e_buttons: ^1.0.0
 ```
 
 ```dart
+import 'package:material_ui/material_ui.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
 ```
 
@@ -97,7 +102,7 @@ import 'package:m3e_buttons/m3e_buttons.dart';
 ## Quick Start
 
 ```dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
 
 class Demo extends StatelessWidget {
