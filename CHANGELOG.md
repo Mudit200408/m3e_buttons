@@ -1,3 +1,8 @@
+# 1.0.1
+- buttons: preserve base token size names when custom action widths or heights are used
+- toggle-button: prioritize checked-state radius over pressed-state radius for checked buttons
+- buttons: add Material 3 Expressive FAB, extended FAB, and FAB menu APIs with token sizing, color roles, decoration overrides, and tests
+
 # 1.0.0
 - pubspec: migrate to standalone material_ui package for flutter 3.47
 - pubspec: Update the minimum flutter SDK to 3.47.0

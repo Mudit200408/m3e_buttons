@@ -1,6 +1,6 @@
 name: m3e_buttons
 description: "Material 3 Expressive button components for Flutter with spring motion, toggle groups, and split menus."
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/Mudit200408/m3e_buttons
 repository: https://github.com/Mudit200408/m3e_buttons
 issue_tracker: https://github.com/Mudit200408/m3e_buttons/issues
@@ -28,4 +28,3 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 flutter:
-

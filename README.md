@@ -35,6 +35,7 @@ Inspired by the [Jetpack Compose](https://developer.android.com/jetpack/compose)
   - [M3EToggleButton](#m3etogglebutton)
   - [M3EToggleButtonGroup](#m3etogglebuttongroup)
   - [M3ESplitButton](#m3esplitbutton)
+  - [FABs](#fabs)
 - [Decoration System](#decoration-system)
 - [Enums & Tokens](#enums--tokens)
 - [Motion System](#motion-system)
@@ -54,6 +55,7 @@ Flutter's built-in buttons don't animate their shape on press. Material 3 Expres
 - **Toggle buttons** — Icon/label swap animations with expressive checked-state shape morphing.
 - **Connected toggle groups** — Neighbor-squish, single- and multi-select, overflow handling.
 - **Split buttons** — Dual-segment with popup, bottom sheet, or custom menu.
+- **FABs and FAB menus** — Token-sized FABs, extended FABs, and staggered expanding action menus.
 - **Decoration-based styling** — One `M3EButtonDecoration` controls everything. No `ButtonStyle` juggling.
 - **Haptic feedback** — Four levels, baked into the decoration model.
 
@@ -89,7 +91,7 @@ Add `m3e_buttons` and `material_ui` to your `pubspec.yaml`:
 ```yaml
 dependencies:
   material_ui: ^1.0.0
-  m3e_buttons: ^1.0.0
+  m3e_buttons: ^1.0.1
 ```
 
 ```dart
@@ -482,6 +484,266 @@ M3EElevatedSplitButton<String>(items: [...], onSelected: (v) {}, onPressed: () {
 | `enabled` | `bool` | `true` | Disables both segments. |
 | `decoration` | `M3ESplitButtonDecoration?` | `null` | Full decoration bundle. |
 | `selectedValue` | `T?` | `null` | Currently selected value for menu state display. |
+
+---
+
+### FABs
+
+`m3e_buttons` includes two FAB API families:
+
+- `M3EFab`, `M3EExtendedFab`, and `M3EFabMenu` are the Material 3 Expressive token-first APIs with FAB color roles, FAB sizes, press scale, and menu motion.
+- `M3EFloatingActionButton` and `M3EExtendedFloatingActionButton` are button-decoration-based APIs for projects that want FAB sizing while reusing `M3EButtonDecoration`.
+
+#### `M3EFab`
+
+```dart
+M3EFab(
+  icon: const Icon(Icons.add),
+  onPressed: () {},
+  size: M3EFabSize.medium,
+  color: M3EFabColor.primary,
+  tooltip: 'Create',
+)
+```
+
+Use `M3EFab` when you want the M3E FAB token model directly. It applies token dimensions, icon sizing, color roles, rounded container radii, and spring press scaling.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `icon` | `Widget` | **required** | Icon content shown in the FAB. |
+| `onPressed` | `VoidCallback?` | `null` | Tap callback. `null` disables the FAB. |
+| `size` | `M3EFabSize` | `medium` | FAB token size: `small`, `medium`, or `large`. |
+| `color` | `M3EFabColor` | `primary` | Color role: `primary`, `secondary`, `tertiary`, or `surface`. |
+| `cornerRadius` | `double?` | `null` | Overrides the size token radius. |
+| `decoration` | `M3EFabDecoration?` | `null` | Overrides colors, border, overlay, press scale, and press motion. |
+| `tooltip` | `String?` | `null` | Tooltip and accessibility hint. |
+| `focusNode` | `FocusNode?` | `null` | External focus node. |
+| `autofocus` | `bool` | `false` | Requests focus when inserted into the tree. |
+
+#### `M3EExtendedFab`
+
+```dart
+M3EExtendedFab(
+  icon: const Icon(Icons.edit),
+  label: 'Compose',
+  onPressed: () {},
+  size: M3EFabSize.medium,
+  color: M3EFabColor.secondary,
+  extended: true,
+)
+```
+
+`M3EExtendedFab` uses the same color and decoration model as `M3EFab`, but adds a text label and animated extended/collapsed layout.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `label` | `String` | **required** | Text label shown when extended. |
+| `icon` | `Widget` | **required** | Leading icon content. |
+| `onPressed` | `VoidCallback?` | `null` | Tap callback. `null` disables the FAB. |
+| `size` | `M3EFabSize` | `medium` | FAB token size. |
+| `color` | `M3EFabColor` | `primary` | Color role. |
+| `extended` | `bool` | `true` | Shows the full label when true; collapses to icon-only when false. |
+| `decoration` | `M3EFabDecoration?` | `null` | Overrides colors, border, overlay, press scale, and press motion. |
+| `focusNode` | `FocusNode?` | `null` | External focus node. |
+| `autofocus` | `bool` | `false` | Requests focus when inserted into the tree. |
+
+#### `M3EFabMenu`
+
+```dart
+M3EFabMenu(
+  position: M3EFabMenuPosition.right,
+  color: M3EFabColor.primary,
+  size: M3EFabSize.medium,
+  onOpenChanged: (open) {},
+  items: [
+    M3EFabMenuItem(
+      icon: const Icon(Icons.share),
+      label: 'Share',
+      onPressed: () {},
+    ),
+    M3EFabMenuItem(
+      icon: const Icon(Icons.favorite),
+      label: 'Favorite',
+      backgroundColor: Colors.pink.shade100,
+      foregroundColor: Colors.pink.shade900,
+      onPressed: () {},
+    ),
+  ],
+)
+```
+
+`M3EFabMenu` renders a trigger FAB and opens a staggered vertical list of action pills in an overlay. The trigger icon morphs between expand and collapse states, while each menu item animates with spring motion.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `items` | `List<M3EFabMenuItem>` | **required** | Menu actions shown when open. |
+| `icon` | `Widget` | `Icon(Icons.add_rounded)` | Closed trigger icon. |
+| `closeIcon` | `Widget` | `Icon(Icons.close_rounded)` | Open trigger icon. |
+| `expandIcon` | `Widget?` | `null` | Optional override for the closed trigger icon. Falls back to `icon`. |
+| `collapseIcon` | `Widget?` | `null` | Optional override for the open trigger icon. Falls back to `closeIcon`. |
+| `color` | `M3EFabColor` | `primary` | Trigger FAB color role. |
+| `size` | `M3EFabSize` | `medium` | Trigger FAB token size. |
+| `position` | `M3EFabMenuPosition` | `right` | Horizontal alignment for action pills. |
+| `decoration` | `M3EFabMenuDecoration?` | `null` | Menu spacing, item sizing, colors, scrim, and motion. |
+| `onOpenChanged` | `ValueChanged<bool>?` | `null` | Called whenever the menu opens or closes. |
+
+#### `M3EFabMenuItem`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `icon` | `Widget` | **required** | Icon shown in the action pill. |
+| `label` | `String` | **required** | Text shown next to the icon. |
+| `onPressed` | `VoidCallback?` | `null` | Action callback. The menu closes after this callback runs. |
+| `backgroundColor` | `Color?` | `null` | Per-item background override. |
+| `foregroundColor` | `Color?` | `null` | Per-item icon and label color override. |
+
+#### `M3EFloatingActionButton`
+
+```dart
+M3EFloatingActionButton(
+  onPressed: () {},
+  child: const Icon(Icons.add),
+  size: M3EFloatingActionButtonSize.standard,
+  containerColor: Colors.deepPurple,
+  contentColor: Colors.white,
+)
+```
+
+This API wraps `M3EButton` with FAB dimensions and uses `M3EButtonDecoration`. Choose it when you prefer generic button styles and decoration composition over FAB-specific color roles.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `onPressed` | `VoidCallback?` | **required** | Tap callback. `null` disables the button. |
+| `child` | `Widget` | **required** | FAB content. |
+| `size` | `M3EFloatingActionButtonSize` | `standard` | Size token: `small`, `standard`, `medium`, or `large`. |
+| `containerColor` | `Color?` | `colorScheme.primaryContainer` | Background override. |
+| `contentColor` | `Color?` | `colorScheme.onPrimaryContainer` | Foreground override. |
+| `elevation` | `double?` | `6` | Elevation override. |
+| `shape` | `M3EButtonShape` | `round` | Uses circular radius when `round`, token radius otherwise. |
+| `decoration` | `M3EButtonDecoration?` | `null` | Full `M3EButtonDecoration` override bundle. |
+| `enabled` | `bool` | `true` | Disables without removing from the tree. |
+| `tooltip` | `String?` | `null` | Tooltip text. |
+
+Specialized constructors are available as subclasses with the size pre-wired:
+
+| Class | Size |
+|-------|------|
+| `M3ESmallFloatingActionButton` | `M3EFloatingActionButtonSize.small` |
+| `M3EMediumFloatingActionButton` | `M3EFloatingActionButtonSize.medium` |
+| `M3ELargeFloatingActionButton` | `M3EFloatingActionButtonSize.large` |
+
+#### `M3EExtendedFloatingActionButton`
+
+```dart
+M3EExtendedFloatingActionButton(
+  onPressed: () {},
+  icon: const Icon(Icons.navigation),
+  label: const Text('Navigate'),
+  expanded: true,
+  motion: M3EMotion.standardSpatialFast,
+  effectsMotion: M3EMotion.standardEffectsFast,
+)
+```
+
+This API extends the decoration-based FAB family with animated width and label opacity.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `onPressed` | `VoidCallback?` | **required** | Tap callback. `null` disables the button. |
+| `icon` | `Widget` | **required** | Leading icon. |
+| `label` | `Widget` | **required** | Label shown when expanded. |
+| `expanded` | `bool` | `true` | Animates between icon-only and extended layout. |
+| `size` | `M3EFloatingActionButtonSize` | `standard` | Size token. |
+| `containerColor` | `Color?` | `colorScheme.primaryContainer` | Background override. |
+| `contentColor` | `Color?` | `colorScheme.onPrimaryContainer` | Foreground override. |
+| `elevation` | `double?` | `6` | Elevation override. |
+| `decoration` | `M3EButtonDecoration?` | `null` | Full `M3EButtonDecoration` override bundle. |
+| `enabled` | `bool` | `true` | Disables without removing from the tree. |
+| `tooltip` | `String?` | `null` | Tooltip text. |
+| `motion` | `M3EMotion` | `standardSpatialFast` | Width animation spring. |
+| `effectsMotion` | `M3EMotion` | `standardEffectsFast` | Label opacity and effect spring. |
+
+Specialized subclasses are available with the size pre-wired:
+
+| Class | Size |
+|-------|------|
+| `M3ESmallExtendedFloatingActionButton` | `M3EFloatingActionButtonSize.small` |
+| `M3EMediumExtendedFloatingActionButton` | `M3EFloatingActionButtonSize.medium` |
+| `M3ELargeExtendedFloatingActionButton` | `M3EFloatingActionButtonSize.large` |
+
+#### FAB Enums
+
+| Enum | Values | Description |
+|------|--------|-------------|
+| `M3EFabColor` | `primary`, `secondary`, `tertiary`, `surface` | M3E FAB color role resolved from `ColorScheme`. |
+| `M3EFabSize` | `small`, `medium`, `large` | M3E token-first FAB sizes used by `M3EFab`, `M3EExtendedFab`, and `M3EFabMenu`. |
+| `M3EFabMenuPosition` | `left`, `right` | Menu item horizontal anchor. |
+| `M3EFloatingActionButtonSize` | `small`, `standard`, `medium`, `large` | Decoration-based FAB size tokens. |
+
+#### `M3EFabDecoration`
+
+```dart
+M3EFab(
+  icon: const Icon(Icons.add),
+  onPressed: () {},
+  decoration: M3EFabDecoration(
+    backgroundColor: WidgetStatePropertyAll(Colors.deepPurple),
+    foregroundColor: WidgetStatePropertyAll(Colors.white),
+    pressedScale: 0.92,
+    motion: M3EMotion.custom(380, 0.55),
+  ),
+)
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `backgroundColor` | `WidgetStateProperty<Color?>?` | FAB background override. |
+| `foregroundColor` | `WidgetStateProperty<Color?>?` | Icon and label color override. |
+| `overlayColor` | `WidgetStateProperty<Color?>?` | Pressed, hovered, and focused overlay override. |
+| `side` | `WidgetStateProperty<BorderSide?>?` | Border side override. |
+| `pressedScale` | `double?` | Scale target while pressed. Defaults to the component token. |
+| `motion` | `M3EMotion?` | Spring motion used for press scaling. |
+
+#### `M3EFabMenuDecoration`
+
+```dart
+M3EFabMenu(
+  items: const [],
+  decoration: M3EFabMenuDecoration(
+    menuOffset: 16,
+    itemGap: 10,
+    itemHeight: 56,
+    itemHorizontalPadding: 20,
+    iconSize: 24,
+    iconLabelGap: 12,
+    itemElevation: 6,
+    closedFabSize: 56,
+    openFabSize: 64,
+    scrimColor: Color(0x33000000),
+    expandMotion: M3EMotion.standardPopup,
+    fabShapeMotion: M3EMotion.standardPopup,
+    expandStaggerMs: 35,
+  ),
+)
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `menuOffset` | `double` | Vertical gap between trigger FAB and nearest menu item. |
+| `itemGap` | `double` | Vertical gap between action pills. |
+| `itemHeight` | `double` | Action pill height. |
+| `itemHorizontalPadding` | `double` | Horizontal padding inside each action pill. |
+| `iconSize` | `double` | Icon size inside each action pill. |
+| `iconLabelGap` | `double` | Gap between item icon and label. |
+| `itemElevation` | `double` | Elevation for each action pill. |
+| `closedFabSize` | `double?` | Trigger size while closed. Defaults to the FAB size token. |
+| `openFabSize` | `double?` | Trigger size while open. Defaults to `closedFabSize` or the FAB size token. |
+| `itemBackgroundColor` | `Color?` | Default background color for action pills. |
+| `itemForegroundColor` | `Color?` | Default icon and label color for action pills. |
+| `scrimColor` | `Color` | Fullscreen overlay color behind the open menu. Defaults transparent. |
+| `expandMotion` | `M3EMotion` | Spring used by action pill expansion. |
+| `fabShapeMotion` | `M3EMotion` | Spring used by trigger shape morphing. |
+| `expandStaggerMs` | `int` | Delay between each action pill animation. |
 
 ---
 
