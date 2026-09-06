@@ -1,3 +1,6 @@
+# 1.0.2
+- buttons: update default splash factory to InkSparkle and add custom splash factory support to button decorations.
+
 # 1.0.1
 - buttons: preserve base token size names when custom action widths or heights are used
 - toggle-button: prioritize checked-state radius over pressed-state radius for checked buttons

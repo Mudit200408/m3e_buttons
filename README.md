@@ -91,7 +91,7 @@ Add `m3e_buttons` and `material_ui` to your `pubspec.yaml`:
 ```yaml
 dependencies:
   material_ui: ^1.0.0
-  m3e_buttons: ^1.0.1
+  m3e_buttons: ^1.0.2
 ```
 
 ```dart
@@ -277,7 +277,7 @@ M3EElevatedButton(onPressed: () {}, child: const Text('Upload'))
 | `onLongPress` | `VoidCallback?` | `null` | Long-press callback. |
 | `onHover` | `ValueChanged<bool>?` | `null` | Hover change callback. |
 | `enableFeedback` | `bool` | `true` | Ripple and native haptic. |
-| `splashFactory` | `InteractiveInkFeatureFactory?` | `InkRipple.splashFactory` | Custom splash factory. |
+| `splashFactory` | `InteractiveInkFeatureFactory?` | `InkSparkle.splashFactory` | Custom splash factory. |
 | `statesController` | `WidgetStatesController?` | `null` | Programmatic state control. |
 
 ---
@@ -484,6 +484,7 @@ M3EElevatedSplitButton<String>(items: [...], onSelected: (v) {}, onPressed: () {
 | `enabled` | `bool` | `true` | Disables both segments. |
 | `decoration` | `M3ESplitButtonDecoration?` | `null` | Full decoration bundle. |
 | `selectedValue` | `T?` | `null` | Currently selected value for menu state display. |
+| `splashFactory` | `InteractiveInkFeatureFactory?` | `InkSparkle.splashFactory` | Custom splash factory for segments. |
 
 ---
 
@@ -790,6 +791,7 @@ M3EButton(
 | `overlayColor` | `WidgetStateProperty<Color?>?` | Custom pressed/hovered overlay. |
 | `backgroundBuilder` | `ButtonLayerBuilder?` | Custom background layer (clips to radius). |
 | `foregroundBuilder` | `ButtonLayerBuilder?` | Custom foreground layer (clips to radius). |
+| `splashFactory` | `InteractiveInkFeatureFactory?` | Custom splash factory. |
 
 ### `M3EToggleButtonDecoration`
 
@@ -825,6 +827,7 @@ M3EToggleButton(
 | `hoveredRadius` | `double?` | Corner radius on hover. |
 | `connectedInnerRadius` | `double?` | Inner corner radius for connected groups. |
 | `alignment` | `AlignmentGeometry?` | Custom alignment for button content. |
+| `splashFactory` | `InteractiveInkFeatureFactory?` | Custom splash factory. |
 
 ### `M3ESplitButtonDecoration`
 
