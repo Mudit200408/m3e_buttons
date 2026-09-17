@@ -90,8 +90,8 @@ Add `m3e_buttons` and `material_ui` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  material_ui: ^1.0.0
-  m3e_buttons: ^1.0.2
+  material_ui: ^1.3.0
+  m3e_buttons: ^1.0.3
 ```
 
 ```dart

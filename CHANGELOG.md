@@ -1,3 +1,7 @@
+# 1.0.3
+- buttons: dismiss split button popup on layout and metric changes
+- button: use Material 3's 20dp for sm split button leading icon
+
 # 1.0.2
 - buttons: update default splash factory to InkSparkle and add custom splash factory support to button decorations.
 
