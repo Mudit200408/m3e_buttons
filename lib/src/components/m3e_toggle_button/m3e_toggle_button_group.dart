@@ -68,6 +68,7 @@ class M3EToggleButtonGroupAction {
     this.semanticLabel,
     this.tooltip,
     this.enableFeedback,
+    this.minSquishPadding,
   }) : assert(
          icon != null || label != null,
          'M3EToggleButtonGroupAction must have either an icon or a label.',
@@ -105,6 +106,9 @@ class M3EToggleButtonGroupAction {
   ///
   /// When provided, this overrides the button's natural content-based width.
   final double? width;
+
+  /// The minimum horizontal padding retained per side when compressed by neighbor squish.
+  final double? minSquishPadding;
 
   // ── Effective value helpers ──────────────────────────────────────────────
 
@@ -201,6 +205,10 @@ class M3EToggleButtonGroup extends StatefulWidget {
     /// Neighbors shrink proportionally to accommodate the expansion.
     /// Defaults to `0.15`.
     this.expandedRatio = 0.15,
+
+    /// The minimum horizontal padding retained per side when a button is compressed by neighbor squish.
+    /// Defaults to `ButtonConstants.kDefaultMinSquishPadding` (4.0).
+    this.minSquishPadding = ButtonConstants.kDefaultMinSquishPadding,
 
     this.haptic = M3EHapticFeedback.none,
     this.enableFeedback = true,
@@ -322,6 +330,9 @@ class M3EToggleButtonGroup extends StatefulWidget {
   ///
   /// Neighbors shrink proportionally to accommodate the expansion.
   final double expandedRatio;
+
+  /// The minimum horizontal padding retained per side when a button is compressed by neighbor squish.
+  final double minSquishPadding;
 
   /// Haptic feedback intensity for button interactions.
   ///
@@ -765,6 +776,11 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup>
         checkedLabel: action.checkedLabel,
         enabled: action.enabled,
         enableFeedback: action.enableFeedback ?? widget.enableFeedback,
+        minSquishPadding:
+            action.minSquishPadding ??
+            action.decoration?.minSquishPadding ??
+            widget.decoration?.minSquishPadding ??
+            widget.minSquishPadding,
         onCheckedChange: (_) {},
       );
     }
@@ -785,6 +801,11 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup>
           checkedLabel: action.checkedLabel,
           enabled: action.enabled,
           enableFeedback: action.enableFeedback ?? widget.enableFeedback,
+          minSquishPadding:
+              action.minSquishPadding ??
+              action.decoration?.minSquishPadding ??
+              widget.decoration?.minSquishPadding ??
+              widget.minSquishPadding,
           onCheckedChange: (_) {},
         ),
         M3EToggleButton(
@@ -799,6 +820,11 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup>
           checkedLabel: action.checkedLabel,
           enabled: action.enabled,
           enableFeedback: action.enableFeedback ?? widget.enableFeedback,
+          minSquishPadding:
+              action.minSquishPadding ??
+              action.decoration?.minSquishPadding ??
+              widget.decoration?.minSquishPadding ??
+              widget.minSquishPadding,
           onCheckedChange: (_) {},
         ),
       ],
@@ -1754,6 +1780,11 @@ class _M3EToggleButtonGroupState extends State<M3EToggleButtonGroup>
       isGroupConnected: widget._connected,
       isFirstInGroup: isFirst,
       isLastInGroup: isLast,
+      minSquishPadding:
+          action.minSquishPadding ??
+          action.decoration?.minSquishPadding ??
+          widget.decoration?.minSquishPadding ??
+          widget.minSquishPadding,
       decoration: _cachedDecorations[index],
       statesController: _controllers[index],
       focusNode: action.focusNode ?? _focusNodes[index],

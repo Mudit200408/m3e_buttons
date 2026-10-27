@@ -422,6 +422,9 @@ class M3EToggleButtonDecoration {
   /// Inner corner radius for connected button groups.
   final double? connectedInnerRadius;
 
+  /// The minimum horizontal padding to retain per side when compressed by neighbor squish.
+  final double? minSquishPadding;
+
   /// Custom alignment.
   final AlignmentGeometry? alignment;
 
@@ -443,6 +446,7 @@ class M3EToggleButtonDecoration {
     this.pressedRadius,
     this.hoveredRadius,
     this.connectedInnerRadius,
+    this.minSquishPadding,
     this.alignment,
     this.splashFactory,
   });
@@ -466,6 +470,7 @@ class M3EToggleButtonDecoration {
     double? pressedRadius,
     double? hoveredRadius,
     double? connectedInnerRadius,
+    double? minSquishPadding,
     MouseCursor? enabledMouseCursor,
     MouseCursor? disabledMouseCursor,
     Color? overlayColor,
@@ -523,6 +528,7 @@ class M3EToggleButtonDecoration {
       pressedRadius: pressedRadius,
       hoveredRadius: hoveredRadius,
       connectedInnerRadius: connectedInnerRadius,
+      minSquishPadding: minSquishPadding,
       mouseCursor: mouseCursorProp,
       overlayColor: overlayColorProp,
       surfaceTintColor: surfaceTintColorProp,
@@ -547,6 +553,8 @@ class M3EToggleButtonDecoration {
     double? pressedRadius,
     double? hoveredRadius,
     double? connectedInnerRadius,
+    double? minSquishPadding,
+    AlignmentGeometry? alignment,
     InteractiveInkFeatureFactory? splashFactory,
   }) {
     return M3EToggleButtonDecoration(
@@ -564,6 +572,8 @@ class M3EToggleButtonDecoration {
       pressedRadius: pressedRadius ?? this.pressedRadius,
       hoveredRadius: hoveredRadius ?? this.hoveredRadius,
       connectedInnerRadius: connectedInnerRadius ?? this.connectedInnerRadius,
+      minSquishPadding: minSquishPadding ?? this.minSquishPadding,
+      alignment: alignment ?? this.alignment,
       splashFactory: splashFactory ?? this.splashFactory,
     );
   }
@@ -586,6 +596,8 @@ class M3EToggleButtonDecoration {
           pressedRadius == other.pressedRadius &&
           hoveredRadius == other.hoveredRadius &&
           connectedInnerRadius == other.connectedInnerRadius &&
+          minSquishPadding == other.minSquishPadding &&
+          alignment == other.alignment &&
           splashFactory == other.splashFactory;
 
   @override
@@ -604,6 +616,8 @@ class M3EToggleButtonDecoration {
     pressedRadius,
     hoveredRadius,
     connectedInnerRadius,
+    minSquishPadding,
+    alignment,
     splashFactory,
   ]);
 }
