@@ -1,3 +1,7 @@
+# 1.0.4
+- buttons: adapt padding during neighbor squish to prevent label cutoff
+- toggle-button: fix outer corner radii of connected groups in rtl [Contributed by Délia Cheminot (@delia-cheminot)]
+
 # 1.0.3
 - buttons: dismiss split button popup on layout and metric changes
 - button: use Material 3's 20dp for sm split button leading icon

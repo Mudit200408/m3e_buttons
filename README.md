@@ -91,7 +91,7 @@ Add `m3e_buttons` and `material_ui` to your `pubspec.yaml`:
 ```yaml
 dependencies:
   material_ui: ^1.3.0
-  m3e_buttons: ^1.0.3
+  m3e_buttons: ^1.0.4
 ```
 
 ```dart
@@ -332,6 +332,7 @@ M3EOutlinedToggleButton(onCheckedChange: (v) {}, icon: const Icon(Icons.star_bor
 | `label` | `Widget?` | `null` | Text label (makes button content-width). |
 | `checkedLabel` | `Widget?` | `null` | Checked label. Falls back to `label`. |
 | `allowMultilineLabel` | `bool` | `false` | When `true`, enables wrapping multiline label content instead of clipping. |
+| `minSquishPadding` | `double` | `4.0` | Minimum horizontal padding retained per side when compressed by neighbor squish. |
 | `checked` | `bool?` | `null` | External state. `null` = internal management. |
 | `style` | `M3EButtonStyle` | `filled` | Visual style. |
 | `size` | `M3EButtonSize` | `sm` | Size preset. |
@@ -395,6 +396,7 @@ M3EToggleButtonGroup(
 | `onSelectedIndicesChanged` | `ValueChanged<Set<int>>?` | `null` | Multi-select callback. |
 | `neighborSquish` | `bool` | `true` | Neighbor compression on press. |
 | `expandedRatio` | `double` | `0.15` | Press expansion factor relative to natural width. |
+| `minSquishPadding` | `double` | `4.0` | Group-level minimum horizontal padding retained during neighbor squish. |
 | `haptic` | `M3EHapticFeedback` | `none` | Group-level haptics. |
 | `decoration` | `M3EToggleButtonDecoration?` | `null` | Group-level decoration. Per-action decoration takes precedence. |
 | `semanticLabel` | `String?` | `null` | Accessibility label for the group container. |
@@ -412,6 +414,7 @@ M3EToggleButtonGroup(
 | `checked` | `bool?` | `null` | Per-action controlled state. Do not combine with group-level `selectedIndex`. |
 | `enabled` | `bool` | `true` | Enables or disables this action. |
 | `decoration` | `M3EToggleButtonDecoration?` | `null` | Per-button decoration override. |
+| `minSquishPadding` | `double?` | `null` | Per-action override for minimum squish padding. |
 | `width` | `double?` | `null` | Fixed width overriding natural content width. |
 | `focusNode` | `FocusNode?` | `null` | External focus node. |
 | `semanticLabel` | `String?` | `null` | Accessibility label. |
@@ -826,6 +829,7 @@ M3EToggleButton(
 | `pressedRadius` | `double?` | Corner radius during press. |
 | `hoveredRadius` | `double?` | Corner radius on hover. |
 | `connectedInnerRadius` | `double?` | Inner corner radius for connected groups. |
+| `minSquishPadding` | `double?` | Minimum horizontal padding retained during neighbor squish. |
 | `alignment` | `AlignmentGeometry?` | Custom alignment for button content. |
 | `splashFactory` | `InteractiveInkFeatureFactory?` | Custom splash factory. |
 
